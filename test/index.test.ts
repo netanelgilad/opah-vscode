@@ -3,6 +3,7 @@ import { writeFileSync, unlinkSync } from 'fs';
 import { runFile } from '../src/index';
 import { Chance } from 'chance';
 import { join } from 'path';
+import { createServer } from 'http';
 
 describe('runFile', () => {
   it('should run a typecript file', async () => {
@@ -74,6 +75,56 @@ describe('runFile', () => {
         unlinkSync(dependantFilePath);
         unlinkSync(dependencyFilePath);
       }
+    });
+
+    describe('using http(/s) protocol', () => {
+      it('should run a file with an http dependency', async () => {
+        const chance = new Chance();
+        const expectedStdout = chance.string();
+        const httpServer = createServer((_req, res) => {
+          res.write(`
+            export function foo() {
+              console.log('${expectedStdout}');
+            }
+          `);
+          res.end();
+        });
+
+        await new Promise(resolve => {
+          httpServer.listen(resolve);
+        });
+
+        const tmpFilePath = file({ extension: 'ts' });
+
+        writeFileSync(
+          tmpFilePath,
+          `
+          import {foo} from "http://localhost:${
+            (httpServer.address()! as any).port
+          }";
+
+          export default () => {
+            foo();
+          }
+        `
+        );
+
+        try {
+          const childProcess = await runFile(tmpFilePath);
+
+          expect(childProcess.stdout).toBeDefined();
+
+          let output = '';
+          for await (const chunk of childProcess.stdout!) {
+            output += chunk;
+          }
+
+          expect(output).toEqual(expectedStdout + '\n');
+        } finally {
+          httpServer.close();
+          unlinkSync(tmpFilePath);
+        }
+      });
     });
   });
 });
