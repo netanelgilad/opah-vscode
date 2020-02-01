@@ -37,6 +37,40 @@ describe('runFile', () => {
     }
   });
 
+  it('should run a relative typecript file', async () => {
+    const tmpDirectory = directory();
+    const tmpFilePath = './fileToRun.ts';
+    const chance = new Chance();
+    const expectedStdout = chance.string();
+
+    writeFileSync(
+      join(tmpDirectory, tmpFilePath),
+      `
+      export default () => {
+        const text: string = '${expectedStdout}';
+        console.log(text);
+      }
+    `
+    );
+
+    try {
+      const childProcess = await runFile(tmpFilePath, {
+        cwd: tmpDirectory,
+      });
+
+      expect(childProcess.stdout).toBeDefined();
+
+      let output = '';
+      for await (const chunk of childProcess.stdout!) {
+        output += chunk;
+      }
+
+      expect(output).toEqual(expectedStdout + '\n');
+    } finally {
+      unlinkSync(join(tmpDirectory, tmpFilePath));
+    }
+  });
+
   it('should run the given exported function from a file', async () => {
     const tmpFilePath = file({ extension: 'ts' });
     const chance = new Chance();
@@ -54,7 +88,10 @@ describe('runFile', () => {
     );
 
     try {
-      const childProcess = await runFile(tmpFilePath, exportedFunctionName);
+      const childProcess = await runFile(tmpFilePath, {
+        exportedFunctionName,
+        args: [],
+      });
 
       expect(childProcess.stdout).toBeDefined();
 
@@ -85,11 +122,10 @@ describe('runFile', () => {
     );
 
     try {
-      const childProcess = await runFile(
-        tmpFilePath,
+      const childProcess = await runFile(tmpFilePath, {
         exportedFunctionName,
-        expectedStdout
-      );
+        args: [expectedStdout],
+      });
 
       expect(childProcess.stdout).toBeDefined();
 

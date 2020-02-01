@@ -1,45 +1,19 @@
 {
+  "name": "@depno/workspace",
   "version": "0.1.0",
+  "private": true,
+  "repository": "git@github.com:netanelgilad/depno.git",
+  "author": "Netanel Gilad <netanelgilad@gmail.com>",
   "license": "MIT",
-  "main": "dist/index.js",
-  "typings": "dist/index.d.ts",
-  "files": [
-    "dist"
-  ],
-  "scripts": {
-    "test": "jest"
-  },
-  "peerDependencies": {},
-  "husky": {
-    "hooks": {
-      "pre-commit": "tsdx lint"
-    }
+  "workspaces": {
+    "packages": [
+      "./packages/*"
+    ]
   },
   "prettier": {
     "printWidth": 80,
     "semi": true,
     "singleQuote": true,
     "trailingComma": "es5"
-  },
-  "name": "depno",
-  "author": "Netanel Gilad",
-  "module": "dist/mylib.esm.js",
-  "devDependencies": {
-    "@types/chance": "^1.0.8",
-    "@types/jest": "^25.1.0",
-    "@types/node": "^13.5.3",
-    "babel-jest": "^25.1.0",
-    "chance": "^1.1.4",
-    "husky": "^4.2.1",
-    "jest": "^25.1.0",
-    "typescript": "^3.7.5"
-  },
-  "dependencies": {
-    "@babel/core": "^7.8.3",
-    "@babel/preset-env": "^7.8.4",
-    "@babel/preset-typescript": "^7.8.3",
-    "@babel/types": "^7.8.3",
-    "axios": "^0.19.2",
-    "tempy": "^0.3.0"
   }
 }
