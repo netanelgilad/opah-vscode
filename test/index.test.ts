@@ -69,6 +69,41 @@ describe('runFile', () => {
     }
   });
 
+  it('should run the given exported function with the given parameteres from a file', async () => {
+    const tmpFilePath = file({ extension: 'ts' });
+    const chance = new Chance();
+    const expectedStdout = chance.string();
+    const exportedFunctionName = chance.string({ pool: 'abcdef' });
+
+    writeFileSync(
+      tmpFilePath,
+      `
+      export const ${exportedFunctionName} = (text) => {
+        console.log(text);
+      }
+    `
+    );
+
+    try {
+      const childProcess = await runFile(
+        tmpFilePath,
+        exportedFunctionName,
+        expectedStdout
+      );
+
+      expect(childProcess.stdout).toBeDefined();
+
+      let output = '';
+      for await (const chunk of childProcess.stdout!) {
+        output += chunk;
+      }
+
+      expect(output).toEqual(expectedStdout + '\n');
+    } finally {
+      unlinkSync(tmpFilePath);
+    }
+  });
+
   describe('with dependencies', () => {
     it('should run the default export from a file with a single dependency', async () => {
       const tmpDirectory = directory();

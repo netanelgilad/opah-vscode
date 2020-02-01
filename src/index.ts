@@ -66,12 +66,14 @@ export async function buildFile(path: string): Promise<string> {
 
 export async function runFile(
   path: string,
-  exportedFunctionName?: string
+  exportedFunctionName?: string,
+  ...args: any[]
 ): Promise<ChildProcess> {
   const outputFile = await buildFile(path);
 
   return spawn('node', [
     '-e',
-    `require("${outputFile}").${exportedFunctionName ?? 'default'}()`,
+    `require("${outputFile}").${exportedFunctionName ??
+      'default'}(${args.map(x => JSON.stringify(x)).join(',')})`,
   ]);
 }
