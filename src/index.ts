@@ -64,8 +64,14 @@ export async function buildFile(path: string): Promise<string> {
   return tmpFilePath;
 }
 
-export async function runFile(path: string): Promise<ChildProcess> {
+export async function runFile(
+  path: string,
+  exportedFunctionName?: string
+): Promise<ChildProcess> {
   const outputFile = await buildFile(path);
 
-  return spawn('node', ['-e', `require("${outputFile}").default()`]);
+  return spawn('node', [
+    '-e',
+    `require("${outputFile}").${exportedFunctionName ?? 'default'}()`,
+  ]);
 }
