@@ -10,6 +10,7 @@ import {
 } from '@babel/types';
 import { resolve, dirname } from 'path';
 import axios from 'axios';
+import { resolve as urlResolve } from 'url';
 
 export async function buildFile(path: string): Promise<string> {
   const fileContents = path.startsWith('/')
@@ -29,7 +30,9 @@ export async function buildFile(path: string): Promise<string> {
   for (const dependency of importDeclarations) {
     const dependencyPath = dependency.source.value;
     const dependencyURI = dependencyPath.startsWith('.')
-      ? resolve(dirname(path), dependencyPath)
+      ? path.startsWith('/')
+        ? resolve(dirname(path), dependencyPath)
+        : urlResolve(path, dependencyPath)
       : dependencyPath;
     const dependencyOutputFile = await buildFile(dependencyURI);
     dependenciesToOutputFiles.set(dependencyPath, dependencyOutputFile);

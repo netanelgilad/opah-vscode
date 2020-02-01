@@ -233,6 +233,57 @@ describe('runFile', () => {
           unlinkSync(tmpFilePath);
         }
       });
+
+      it('should run an http file with a relative dependency', async () => {
+        const chance = new Chance();
+        const expectedStdout = chance.string();
+        const httpServer = createServer((req, res) => {
+          if (req.url === '/index.ts') {
+            res.write(`
+              import {foo} from "./dependency.ts";
+    
+              export default () => {
+                foo();
+              }
+            `);
+          } else if (req.url === '/dependency.ts') {
+            res.write(`
+              export function foo() {
+                console.log('${expectedStdout}');
+              }
+            `);
+          }
+          res.end();
+        });
+
+        await new Promise(resolve => {
+          httpServer.listen(resolve);
+        });
+
+        try {
+          const childProcess = await runFile(
+            `http://localhost:${(httpServer.address()! as any).port}/index.ts`
+          );
+
+          let stderr = '';
+          for await (const chunk of childProcess.stderr!) {
+            stderr += chunk;
+          }
+
+          expect(stderr).toEqual('');
+
+          expect(childProcess.stdout).toBeDefined();
+
+          let output = '';
+          for await (const chunk of childProcess.stdout!) {
+            output += chunk;
+          }
+
+          expect(output).toEqual(expectedStdout + '\n');
+        } finally {
+          httpServer.close();
+        }
+      });
     });
   });
 });
