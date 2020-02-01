@@ -6,7 +6,7 @@ import { join } from 'path';
 import { createServer } from 'http';
 
 describe('runFile', () => {
-  it('should run a typecript file', async () => {
+  it('should run the default export from a typecript file', async () => {
     const tmpFilePath = file({ extension: 'ts' });
     const chance = new Chance();
     const expectedStdout = chance.string();
@@ -14,8 +14,10 @@ describe('runFile', () => {
     writeFileSync(
       tmpFilePath,
       `
-      const text: string = '${expectedStdout}';
-      console.log(text);
+      export default () => {
+        const text: string = '${expectedStdout}';
+        console.log(text);
+      }
     `
     );
 
@@ -36,7 +38,7 @@ describe('runFile', () => {
   });
 
   describe('with dependencies', () => {
-    it('should run a file with a single dependency', async () => {
+    it('should run the default export from a file with a single dependency', async () => {
       const tmpDirectory = directory();
       const dependantFilePath = join(tmpDirectory, 'dependant.ts');
       const dependencyFilePath = join(tmpDirectory, 'dependency.ts');
@@ -47,7 +49,10 @@ describe('runFile', () => {
         dependantFilePath,
         `
         import {foo} from "./dependency.ts";
-        foo();
+
+        export default () => {
+          foo();
+        }
       `
       );
 

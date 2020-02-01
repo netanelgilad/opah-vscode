@@ -67,5 +67,5 @@ export async function buildFile(path: string): Promise<string> {
 export async function runFile(path: string): Promise<ChildProcess> {
   const outputFile = await buildFile(path);
 
-  return spawn('node', [outputFile]);
+  return spawn('node', ['-e', `require("${outputFile}").default()`]);
 }
