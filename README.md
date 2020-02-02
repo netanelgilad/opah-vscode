@@ -1,6 +1,10 @@
-# <center>Depno</center>
+<div align="center">
+<h1>Depno</h1>
 
-Depno is an opinionated Typescript runtime optimized for developer experience.
+<p>An opinionated Typescript runtime optimized for developer experience.</p>
+</div>
+
+<hr />
 
 ## Features
 
