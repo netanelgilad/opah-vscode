@@ -1,27 +1,31 @@
-# TSDX Bootstrap
+# <center>Depno</center>
 
-This project was bootstrapped with [TSDX](https://github.com/jaredpalmer/tsdx).
+Depno is an opinionated Typescript runtime optimized for developer experience.
 
-## Local Development
+## Features
 
-Below is a list of commands you will probably find useful.
+### Minimal Configuration
 
-### `npm start` or `yarn start`
+Working with typescript code should be an easy and boilerplate-free experience. That means no configuration is needed to get started and there is minimal configuration to support different use cases, by avoiding providing multiple configurations to do the same thing.
 
-Runs the project in development/watch mode. Your project will be rebuilt upon changes. TSDX has a special logger for you convenience. Error messages are pretty printed and formatted for compatibility VS Code's Problems tab.
+For now, that means:
 
-<img src="https://user-images.githubusercontent.com/4060187/52168303-574d3a00-26f6-11e9-9f3b-71dbec9ebfcb.gif" width="600" />
+- No `tsconfig.json`. All Typescript compiler options are handled by the runtime and are not configurable. The runtime will determine an opionated set of compiler options.
 
-Your library will be rebuilt if you make edits.
+### Decoupling type checking and runtime
 
-### `npm run build` or `yarn build`
+To have the best feedback loop during development with `depno`, type checking is not a prerequisite for running code. That means that you can still run your code even if it doesn't pass a type check. You can get feedback from your tests or run your code directly during a type refactor or just before getting all the types right.
 
-Bundles the package to the `dist` folder.
-The package is optimized and bundled with Rollup into multiple formats (CommonJS, UMD, and ES Module).
+For that, `depno` provides a separate `type-check` command that can be run to validate your code. Think of it as a smart linter that just focused on validating types :smiley:
 
-<img src="https://user-images.githubusercontent.com/4060187/52168322-a98e5b00-26f6-11e9-8cf6-222d716b75ef.gif" width="600" />
+### Integrated testing framework
 
-### `npm test` or `yarn test`
+Testing is an integral part of the development process, and so testing is a first class citizen in `depno`. To reduce the amount of fragmentation in the ecosystem and allow every `depno` developer to enter a new `depno` codebase and be able to run and write tests, the testing framework is integrated into the tool.
 
-Runs the test watcher (Jest) in an interactive mode.
-By default, runs tests related to files changed since the last commit.
+`depno` provides a `test` command to run tests that requires zero configuration to start writing tests.
+
+### No package manager
+
+`depno` follows in `deno`'s footsteps and removes the need for a package manager. The ECMAScript spec already provides a code dependency management solution with ES6 modules and so a package manager only provides more friction. And that same spec supports the domimant way of delivering code today, the HTTP protocol. So no need to re-invent the will here.
+
+In `depno` is no module resolution logic similar to `node.js`, but rather is let's you use HTTP for your dependencies. Publishing becomes as easy as uploading your code to a CDN, and consuming code requires nothing more than defining it in your `import` statements.
