@@ -30,6 +30,6 @@ Testing is an integral part of the development process, and so testing is a firs
 
 ### No package manager
 
-`depno` follows in `deno`'s footsteps and removes the need for a package manager. The ECMAScript spec already provides a code dependency management solution with ES6 modules and so a package manager only provides more friction. And that same spec supports the domimant way of delivering code today, the HTTP protocol. So no need to re-invent the will here.
+`depno` follows in `deno`'s footsteps and removes the need for a package manager. The ECMAScript spec already provides a code dependency management solution with ES6 modules and so a package manager only provides more friction. And that same spec supports the dominant way of delivering code today, the HTTP protocol. So no need to re-invent the wheel here.
 
-In `depno` is no module resolution logic similar to `node.js`, but rather is let's you use HTTP for your dependencies. Publishing becomes as easy as uploading your code to a CDN, and consuming code requires nothing more than defining it in your `import` statements.
+In `depno` there is no module resolution logic similar to `node.js`, but rather is lets you use HTTP for your dependencies. Publishing becomes as easy as uploading your code to a CDN, and consuming code requires nothing more than defining it in your `import` statements.
