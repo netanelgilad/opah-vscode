@@ -5,6 +5,7 @@ import { join } from 'path';
 import { statefulTest } from './statefulTest';
 import { fixtureFile } from './fixtureFile';
 import { staticFileServer } from './staticFileServer';
+import { collectStreamChunks } from './collectStreamChunks';
 
 const chance = new Chance();
 
@@ -24,13 +25,8 @@ describe('runFile', () => {
       const childProcess = await runFile(tmpFilePath);
 
       expect(childProcess.stdout).toBeDefined();
-
-      let output = '';
-      for await (const chunk of childProcess.stdout!) {
-        output += chunk;
-      }
-
-      expect(output).toEqual(expectedStdout + '\n');
+      let stdout = await collectStreamChunks(childProcess.stdout!);
+      expect(stdout).toEqual(expectedStdout + '\n');
     }
   );
 
@@ -53,13 +49,8 @@ describe('runFile', () => {
     });
 
     expect(childProcess.stdout).toBeDefined();
-
-    let output = '';
-    for await (const chunk of childProcess.stdout!) {
-      output += chunk;
-    }
-
-    expect(output).toEqual(expectedStdout + '\n');
+    let stdout = await collectStreamChunks(childProcess.stdout!);
+    expect(stdout).toEqual(expectedStdout + '\n');
   });
 
   statefulTest(
@@ -83,13 +74,8 @@ describe('runFile', () => {
       });
 
       expect(childProcess.stdout).toBeDefined();
-
-      let output = '';
-      for await (const chunk of childProcess.stdout!) {
-        output += chunk;
-      }
-
-      expect(output).toEqual(expectedStdout + '\n');
+      let stdout = await collectStreamChunks(childProcess.stdout!);
+      expect(stdout).toEqual(expectedStdout + '\n');
     }
   );
 
@@ -113,13 +99,8 @@ describe('runFile', () => {
       });
 
       expect(childProcess.stdout).toBeDefined();
-
-      let output = '';
-      for await (const chunk of childProcess.stdout!) {
-        output += chunk;
-      }
-
-      expect(output).toEqual(expectedStdout + '\n');
+      let stdout = await collectStreamChunks(childProcess.stdout!);
+      expect(stdout).toEqual(expectedStdout + '\n');
     }
   );
 
@@ -153,13 +134,8 @@ describe('runFile', () => {
         const childProcess = await runFile(dependantFilePath);
 
         expect(childProcess.stdout).toBeDefined();
-
-        let output = '';
-        for await (const chunk of childProcess.stdout!) {
-          output += chunk;
-        }
-
-        expect(output).toEqual(expectedStdout + '\n');
+        let stdout = await collectStreamChunks(childProcess.stdout!);
+        expect(stdout).toEqual(expectedStdout + '\n');
       }
     );
 
@@ -192,13 +168,8 @@ describe('runFile', () => {
           const childProcess = await runFile(tmpFilePath);
 
           expect(childProcess.stdout).toBeDefined();
-
-          let output = '';
-          for await (const chunk of childProcess.stdout!) {
-            output += chunk;
-          }
-
-          expect(output).toEqual(expectedStdout + '\n');
+          let stdout = await collectStreamChunks(childProcess.stdout!);
+          expect(stdout).toEqual(expectedStdout + '\n');
         }
       );
 
@@ -226,21 +197,12 @@ describe('runFile', () => {
             `http://localhost:${(httpServerAddress! as any).port}/index.ts`
           );
 
-          let stderr = '';
-          for await (const chunk of childProcess.stderr!) {
-            stderr += chunk;
-          }
-
+          let stderr = await collectStreamChunks(childProcess.stderr!);
           expect(stderr).toEqual('');
 
           expect(childProcess.stdout).toBeDefined();
-
-          let output = '';
-          for await (const chunk of childProcess.stdout!) {
-            output += chunk;
-          }
-
-          expect(output).toEqual(expectedStdout + '\n');
+          let stdout = await collectStreamChunks(childProcess.stdout!);
+          expect(stdout).toEqual(expectedStdout + '\n');
         }
       );
     });
