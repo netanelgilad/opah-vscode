@@ -77,9 +77,7 @@ export async function runFile(
 ): Promise<ChildProcess> {
   const args = opts.args ?? [];
   const exportedFunctionName = opts.exportedFunctionName ?? 'default';
-  const uri = path.startsWith('.')
-    ? resolve(opts.cwd ?? process.cwd(), path)
-    : path;
+  const uri = path;
 
   const outputFile = await buildFile(uri);
 
