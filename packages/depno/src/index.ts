@@ -1,5 +1,10 @@
 import { ChildProcess, spawn } from 'child_process';
-import { parseAsync, transformFromAstAsync, NodePath } from '@babel/core';
+import {
+  parseAsync,
+  transformFromAstAsync,
+  NodePath,
+  transformFromAstSync,
+} from '@babel/core';
 import { file } from 'tempy';
 import { writeFileSync, readFileSync } from 'fs';
 import {
@@ -7,7 +12,11 @@ import {
   isImportDeclaration,
   ImportDeclaration,
   stringLiteral,
+  VariableDeclarator,
+  Identifier,
+  CallExpression,
 } from '@babel/types';
+import * as types from '@babel/types';
 import { resolve, dirname } from 'path';
 import axios from 'axios';
 import { resolve as urlResolve } from 'url';
@@ -33,9 +42,13 @@ export async function buildFile(path: string): Promise<string> {
       ? path.startsWith('/')
         ? resolve(dirname(path), dependencyPath)
         : urlResolve(path, dependencyPath)
-      : dependencyPath;
-    const dependencyOutputFile = await buildFile(dependencyURI);
-    dependenciesToOutputFiles.set(dependencyPath, dependencyOutputFile);
+      : dependencyPath.startsWith('http')
+      ? dependencyPath
+      : undefined;
+    if (dependencyURI) {
+      const dependencyOutputFile = await buildFile(dependencyURI);
+      dependenciesToOutputFiles.set(dependencyPath, dependencyOutputFile);
+    }
   }
 
   const { code } = (await transformFromAstAsync(ast!, fileContents, {
@@ -52,10 +65,54 @@ export async function buildFile(path: string): Promise<string> {
     plugins: [
       () => ({
         visitor: {
-          ImportDeclaration(path: NodePath<ImportDeclaration>) {
-            path.node.source = stringLiteral(
-              dependenciesToOutputFiles.get(path.node.source.value)
-            );
+          ImportDeclaration(path: NodePath<ImportDeclaration>, state: unknown) {
+            const dependencyPath = path.node.source.value;
+            if (dependenciesToOutputFiles.has(dependencyPath)) {
+              path.node.source = stringLiteral(
+                dependenciesToOutputFiles.get(dependencyPath)
+              );
+            } else {
+              const localName = path.node.specifiers[0].local.name;
+              const binding = path.scope.getBinding(localName)!;
+              for (const referenceToCreateMacro of binding.referencePaths) {
+                const macroVariableDeclaratorReferencePath =
+                  referenceToCreateMacro.parentPath.parentPath;
+                const macroName = ((macroVariableDeclaratorReferencePath.node as VariableDeclarator)
+                  .id as Identifier).name;
+                const macroFunction = eval(
+                  transformFromAstSync(
+                    types.program([
+                      types.expressionStatement(
+                        (referenceToCreateMacro.parentPath
+                          .node as CallExpression)
+                          .arguments[0] as types.Expression
+                      ),
+                    ]),
+                    '',
+                    {
+                      filename: 'a',
+                      presets: [
+                        '@babel/preset-typescript',
+                        [
+                          '@babel/preset-env',
+                          {
+                            targets: ['current node'],
+                          },
+                        ],
+                      ],
+                    }
+                  )!.code!
+                );
+                const macroDefinitionBinding = referenceToCreateMacro.scope.getBinding(
+                  macroName
+                )!;
+                for (const macroReference of macroDefinitionBinding.referencePaths) {
+                  macroFunction({ reference: macroReference, types, state });
+                  macroVariableDeclaratorReferencePath.remove();
+                }
+              }
+              path.remove();
+            }
           },
         },
       }),

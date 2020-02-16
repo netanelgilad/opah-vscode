@@ -33,3 +33,9 @@ Testing is an integral part of the development process, and so testing is a firs
 `depno` follows in `deno`'s footsteps and removes the need for a package manager. The ECMAScript spec already provides a code dependency management solution with ES6 modules and so a package manager only provides more friction. And that same spec supports the dominant way of delivering code today, the HTTP protocol. So no need to re-invent the wheel here.
 
 In `depno` there is no module resolution logic similar to `node.js`, but rather is lets you use HTTP for your dependencies. Publishing becomes as easy as uploading your code to a CDN, and consuming code requires nothing more than defining it in your `import` statements.
+
+### Macros
+
+Macros are a powerful language feature currently missing from the Typescript ecosystem. With `depno`, you can easily hook into the compilation process and extend the language as you see fit.
+
+Macros should not be complicated, and should not be any different from authoring any other code. In `depno` macros are just functions alongside the code that it manipulates.
