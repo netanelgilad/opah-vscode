@@ -15,5 +15,8 @@
     "semi": true,
     "singleQuote": true,
     "trailingComma": "es5"
+  },
+  "devDependencies": {
+    "prettier": "^1.19.1"
   }
 }
