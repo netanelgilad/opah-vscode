@@ -1,0 +1,131 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`bundlePath should bundle a file scoped binding 1`] = `
+Object {
+  "body": Array [
+    Node {
+      "async": false,
+      "body": Node {
+        "body": Array [],
+        "directives": Array [],
+        "end": 30,
+        "loc": SourceLocation {
+          "end": Position {
+            "column": 7,
+            "line": 4,
+          },
+          "start": Position {
+            "column": 19,
+            "line": 2,
+          },
+        },
+        "start": 20,
+        "type": "BlockStatement",
+      },
+      "end": 30,
+      "generator": false,
+      "id": Node {
+        "end": 17,
+        "loc": SourceLocation {
+          "end": Position {
+            "column": 16,
+            "line": 2,
+          },
+          "identifierName": "a",
+          "start": Position {
+            "column": 15,
+            "line": 2,
+          },
+        },
+        "name": "a",
+        "start": 16,
+        "type": "Identifier",
+      },
+      "loc": SourceLocation {
+        "end": Position {
+          "column": 7,
+          "line": 4,
+        },
+        "start": Position {
+          "column": 6,
+          "line": 2,
+        },
+      },
+      "params": Array [],
+      "start": 7,
+      "type": "FunctionDeclaration",
+    },
+    Node {
+      "declarations": Array [
+        Node {
+          "end": 67,
+          "id": Node {
+            "end": 63,
+            "loc": SourceLocation {
+              "end": Position {
+                "column": 13,
+                "line": 6,
+              },
+              "identifierName": "c",
+              "start": Position {
+                "column": 12,
+                "line": 6,
+              },
+            },
+            "name": "c",
+            "start": 62,
+            "type": "Identifier",
+          },
+          "init": Node {
+            "end": 67,
+            "loc": SourceLocation {
+              "end": Position {
+                "column": 17,
+                "line": 6,
+              },
+              "identifierName": "a",
+              "start": Position {
+                "column": 16,
+                "line": 6,
+              },
+            },
+            "name": "a",
+            "start": 66,
+            "type": "Identifier",
+          },
+          "loc": SourceLocation {
+            "end": Position {
+              "column": 17,
+              "line": 6,
+            },
+            "start": Position {
+              "column": 12,
+              "line": 6,
+            },
+          },
+          "start": 62,
+          "type": "VariableDeclarator",
+        },
+      ],
+      "end": 68,
+      "kind": "const",
+      "loc": SourceLocation {
+        "end": Position {
+          "column": 18,
+          "line": 6,
+        },
+        "start": Position {
+          "column": 6,
+          "line": 6,
+        },
+      },
+      "start": 56,
+      "type": "VariableDeclaration",
+    },
+  ],
+  "directives": Array [],
+  "interpreter": null,
+  "sourceType": "script",
+  "type": "Program",
+}
+`;

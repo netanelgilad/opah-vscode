@@ -2,8 +2,8 @@ import { ChildProcess, spawn } from 'child_process';
 import {
   parseAsync,
   transformFromAstAsync,
-  NodePath,
   transformFromAstSync,
+  NodePath,
 } from '@babel/core';
 import { file } from 'tempy';
 import { writeFileSync, readFileSync } from 'fs';
@@ -14,12 +14,12 @@ import {
   stringLiteral,
   VariableDeclarator,
   Identifier,
-  CallExpression,
 } from '@babel/types';
 import * as types from '@babel/types';
 import { resolve, dirname } from 'path';
 import axios from 'axios';
 import { resolve as urlResolve } from 'url';
+import { bundlePath } from './bundlePath';
 
 export async function buildFile(path: string): Promise<string> {
   const fileContents = path.startsWith('/')
@@ -65,7 +65,7 @@ export async function buildFile(path: string): Promise<string> {
     plugins: [
       () => ({
         visitor: {
-          ImportDeclaration(path: NodePath<ImportDeclaration>, state: unknown) {
+          ImportDeclaration(path: NodePath<ImportDeclaration>, state: any) {
             const dependencyPath = path.node.source.value;
             if (dependenciesToOutputFiles.has(dependencyPath)) {
               path.node.source = stringLiteral(
@@ -79,29 +79,28 @@ export async function buildFile(path: string): Promise<string> {
                   referenceToCreateMacro.parentPath.parentPath;
                 const macroName = ((macroVariableDeclaratorReferencePath.node as VariableDeclarator)
                   .id as Identifier).name;
+                const macroFunctionArgumentPath = referenceToCreateMacro.parentPath.get(
+                  'arguments.0'
+                ) as NodePath<types.Expression>;
+
+                const programForMacroArgument = bundlePath(
+                  macroFunctionArgumentPath,
+                  state.file.path.get('program')
+                );
+
                 const macroFunction = eval(
-                  transformFromAstSync(
-                    types.program([
-                      types.expressionStatement(
-                        (referenceToCreateMacro.parentPath
-                          .node as CallExpression)
-                          .arguments[0] as types.Expression
-                      ),
-                    ]),
-                    '',
-                    {
-                      filename: 'a',
-                      presets: [
-                        '@babel/preset-typescript',
-                        [
-                          '@babel/preset-env',
-                          {
-                            targets: ['current node'],
-                          },
-                        ],
+                  transformFromAstSync(programForMacroArgument, '', {
+                    filename: 'temp.ts',
+                    presets: [
+                      '@babel/preset-typescript',
+                      [
+                        '@babel/preset-env',
+                        {
+                          targets: ['current node'],
+                        },
                       ],
-                    }
-                  )!.code!
+                    ],
+                  })!.code!
                 );
                 const macroDefinitionBinding = referenceToCreateMacro.scope.getBinding(
                   macroName
