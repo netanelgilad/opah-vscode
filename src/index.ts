@@ -1,4 +1,4 @@
-import { ChildProcess, spawn } from 'child_process';
+import { ChildProcess, fork } from 'child_process';
 import {
   parseAsync,
   transformFromAstAsync,
@@ -137,16 +137,17 @@ export async function runFile(
 
   const outputFile = await buildFile(uri);
 
-  return spawn(
-    'node',
-    [
-      '-e',
-      `require("${outputFile}").${exportedFunctionName}(${args
-        .map(x => JSON.stringify(x))
-        .join(',')})`,
-    ],
-    {
-      cwd: opts.cwd,
-    }
+  const tmpFile = file({ extension: 'js' });
+
+  writeFileSync(
+    tmpFile,
+    `require("${outputFile}").${exportedFunctionName}(${args
+      .map(x => JSON.stringify(x))
+      .join(',')})`
   );
+
+  return fork(tmpFile, [], {
+    cwd: opts.cwd,
+    stdio: 'pipe',
+  });
 }
