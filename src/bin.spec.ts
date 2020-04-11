@@ -1,7 +1,7 @@
 import { file } from 'tempy';
 import { Chance } from 'chance';
 import { writeFileSync, unlinkSync } from 'fs';
-import { spawn } from 'child_process';
+import { fork } from 'child_process';
 
 it('should run a given function with given parameters from a typescript file', async () => {
   const tmpFilePath = file({ extension: 'ts' });
@@ -19,14 +19,20 @@ it('should run a given function with given parameters from a typescript file', a
   );
 
   try {
-    const childProcess = spawn('node', [
-      './dist/index.js',
-      tmpFilePath,
-      exportedFunctionName,
-      JSON.stringify(expectedStdout),
-    ]);
+    const childProcess = fork(
+      require.resolve('.bin/ts-node'),
+      [
+        require.resolve('./bin.ts'),
+        tmpFilePath,
+        exportedFunctionName,
+        JSON.stringify(expectedStdout),
+      ],
+      {
+        stdio: 'pipe',
+      }
+    );
 
-    expect(childProcess.stdout).toBeDefined();
+    expect(childProcess.stdout).toBeTruthy();
 
     let output = '';
     for await (const chunk of childProcess.stdout!) {
@@ -44,4 +50,4 @@ it('should run a given function with given parameters from a typescript file', a
   } finally {
     unlinkSync(tmpFilePath);
   }
-});
+}, 20000);

@@ -1,4 +1,4 @@
-import { runFile } from '@depno/depno';
+import { runFile } from './index';
 
 (async () => {
   const fileToRun = process.argv[2];
@@ -9,6 +9,6 @@ import { runFile } from '@depno/depno';
     args: parameters.map(x => JSON.parse(x)),
   });
 
-  childProcess.stdout.pipe(process.stdout);
-  childProcess.stderr.pipe(process.stderr);
+  childProcess.stdout!.pipe(process.stdout);
+  childProcess.stderr!.pipe(process.stderr);
 })();
