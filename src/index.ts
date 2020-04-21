@@ -38,12 +38,12 @@ export async function buildFile(path: string): Promise<string> {
 
   for (const dependency of importDeclarations) {
     const dependencyPath = dependency.source.value;
-    const dependencyURI = dependencyPath.startsWith('.')
+    const dependencyURI = dependencyPath.startsWith('http')
+      ? dependencyPath
+      : dependencyPath.startsWith('.')
       ? path.startsWith('/')
         ? resolve(dirname(path), dependencyPath)
         : urlResolve(path, dependencyPath)
-      : dependencyPath.startsWith('http')
-      ? dependencyPath
       : undefined;
     if (dependencyURI) {
       const dependencyOutputFile = await buildFile(dependencyURI);
@@ -133,9 +133,11 @@ export async function runFile(
 ): Promise<ChildProcess> {
   const args = opts.args ?? [];
   const exportedFunctionName = opts.exportedFunctionName ?? 'default';
-  const uri = path;
+  const uri = path.startsWith('.')
+    ? resolve(opts.cwd || process.cwd(), path)
+    : path;
 
-  const outputFile = await buildFile(resolve(opts.cwd || process.cwd(), uri));
+  const outputFile = await buildFile(uri);
 
   const tmpFile = file({ extension: 'js' });
 
