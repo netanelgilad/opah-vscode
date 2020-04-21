@@ -1,11 +1,16 @@
 {
-  "name": "@depno/workspace",
+  "name": "depno",
   "version": "0.1.0",
   "private": true,
   "repository": "git@github.com:netanelgilad/depno.git",
   "author": "Netanel Gilad <netanelgilad@gmail.com>",
   "license": "MIT",
   "scripts": {
+    "build:ncc": "ncc build ./src/bin.ts",
+    "build:pkg": "pkg ./dist/index.js --output ./dist/depno -t node13-linux-x64 && chmod +x ./dist/depno",
+    "build:docker": "docker build . -t netanelgilad/depno:`git rev-parse HEAD`",
+    "publish:docker": "docker push netanelgilad/depno:`git rev-parse HEAD`",
+    "tag:docker": "docker tag netanelgilad/depno:`git rev-parse HEAD` netanelgilad/depno:latest && docker push netanelgilad/depno:latest",
     "test": "jest"
   },
   "prettier": {
@@ -28,9 +33,11 @@
     "@types/chance": "^1.0.8",
     "@types/jest": "^25.1.0",
     "@types/node": "^13.5.3",
+    "@zeit/ncc": "^0.22.1",
     "babel-jest": "^25.1.0",
     "chance": "^1.1.4",
     "jest": "^25.1.0",
+    "pkg": "^4.4.6",
     "prettier": "^1.19.1",
     "tempy": "^0.3.0",
     "ts-node": "^8.8.2",

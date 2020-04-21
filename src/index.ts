@@ -1,4 +1,4 @@
-import { ChildProcess, spawn } from 'child_process';
+import { ChildProcess, fork } from 'child_process';
 import {
   parseAsync,
   transformFromAstAsync,
@@ -27,7 +27,7 @@ export async function buildFile(path: string): Promise<string> {
     : (await axios.get(path)).data;
   const ast = await parseAsync(fileContents, {
     filename: path,
-    presets: ['@babel/preset-typescript'],
+    presets: [require('@babel/preset-typescript')],
   });
 
   const importDeclarations: ImportDeclaration[] = (((ast as unknown) as File).program.body.filter(
@@ -38,12 +38,12 @@ export async function buildFile(path: string): Promise<string> {
 
   for (const dependency of importDeclarations) {
     const dependencyPath = dependency.source.value;
-    const dependencyURI = dependencyPath.startsWith('.')
+    const dependencyURI = dependencyPath.startsWith('http')
+      ? dependencyPath
+      : dependencyPath.startsWith('.')
       ? path.startsWith('/')
         ? resolve(dirname(path), dependencyPath)
         : urlResolve(path, dependencyPath)
-      : dependencyPath.startsWith('http')
-      ? dependencyPath
       : undefined;
     if (dependencyURI) {
       const dependencyOutputFile = await buildFile(dependencyURI);
@@ -54,9 +54,9 @@ export async function buildFile(path: string): Promise<string> {
   const { code } = (await transformFromAstAsync(ast!, fileContents, {
     filename: path,
     presets: [
-      '@babel/preset-typescript',
+      require('@babel/preset-typescript'),
       [
-        '@babel/preset-env',
+        require('@babel/preset-env'),
         {
           targets: ['current node'],
         },
@@ -92,9 +92,9 @@ export async function buildFile(path: string): Promise<string> {
                   transformFromAstSync(programForMacroArgument, '', {
                     filename: 'temp.ts',
                     presets: [
-                      '@babel/preset-typescript',
+                      require('@babel/preset-typescript'),
                       [
-                        '@babel/preset-env',
+                        require('@babel/preset-env'),
                         {
                           targets: ['current node'],
                         },
@@ -133,20 +133,23 @@ export async function runFile(
 ): Promise<ChildProcess> {
   const args = opts.args ?? [];
   const exportedFunctionName = opts.exportedFunctionName ?? 'default';
-  const uri = path;
+  const uri = path.startsWith('.')
+    ? resolve(opts.cwd || process.cwd(), path)
+    : path;
 
   const outputFile = await buildFile(uri);
 
-  return spawn(
-    'node',
-    [
-      '-e',
-      `require("${outputFile}").${exportedFunctionName}(${args
-        .map(x => JSON.stringify(x))
-        .join(',')})`,
-    ],
-    {
-      cwd: opts.cwd,
-    }
+  const tmpFile = file({ extension: 'js' });
+
+  writeFileSync(
+    tmpFile,
+    `require("${outputFile}").${exportedFunctionName}(${args
+      .map(x => JSON.stringify(x))
+      .join(',')})`
   );
+
+  return fork(tmpFile, [], {
+    cwd: opts.cwd,
+    stdio: 'pipe',
+  });
 }
