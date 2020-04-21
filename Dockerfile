@@ -1,5 +1,5 @@
 FROM ubuntu
 
-ADD ./dist/depno ./
+ADD ./dist/depno /
 
-CMD ./depno
+ENTRYPOINT [ "/depno" ]

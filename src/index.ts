@@ -27,7 +27,7 @@ export async function buildFile(path: string): Promise<string> {
     : (await axios.get(path)).data;
   const ast = await parseAsync(fileContents, {
     filename: path,
-    presets: ['@babel/preset-typescript'],
+    presets: [require('@babel/preset-typescript')],
   });
 
   const importDeclarations: ImportDeclaration[] = (((ast as unknown) as File).program.body.filter(
@@ -54,9 +54,9 @@ export async function buildFile(path: string): Promise<string> {
   const { code } = (await transformFromAstAsync(ast!, fileContents, {
     filename: path,
     presets: [
-      '@babel/preset-typescript',
+      require('@babel/preset-typescript'),
       [
-        '@babel/preset-env',
+        require('@babel/preset-env'),
         {
           targets: ['current node'],
         },
@@ -92,9 +92,9 @@ export async function buildFile(path: string): Promise<string> {
                   transformFromAstSync(programForMacroArgument, '', {
                     filename: 'temp.ts',
                     presets: [
-                      '@babel/preset-typescript',
+                      require('@babel/preset-typescript'),
                       [
-                        '@babel/preset-env',
+                        require('@babel/preset-env'),
                         {
                           targets: ['current node'],
                         },
@@ -135,7 +135,7 @@ export async function runFile(
   const exportedFunctionName = opts.exportedFunctionName ?? 'default';
   const uri = path;
 
-  const outputFile = await buildFile(uri);
+  const outputFile = await buildFile(resolve(opts.cwd || process.cwd(), uri));
 
   const tmpFile = file({ extension: 'js' });
 
