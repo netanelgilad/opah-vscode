@@ -34,7 +34,7 @@ describe('runFile', () => {
     const tmpDirectory = directory();
     const expectedStdout = chance.string();
 
-    const tmpFilePath = yield* fixtureFile(
+    yield* fixtureFile(
       `
         export default () => {
           const text: string = '${expectedStdout}';
@@ -44,7 +44,7 @@ describe('runFile', () => {
       join(tmpDirectory, './fileToRun.ts')
     );
 
-    const childProcess = await runFile(tmpFilePath, {
+    const childProcess = await runFile('./fileToRun.ts', {
       cwd: tmpDirectory,
     });
 
@@ -206,5 +206,48 @@ describe('runFile', () => {
         }
       );
     });
+  });
+
+  describe('builtin modules', () => {
+    statefulTest(
+      'should allow importing Buffer from buffer',
+      async function*() {
+        const tmpFilePath = yield* fixtureFile(`
+        import {Buffer} from "buffer";
+        export default () => {
+          console.log(typeof Buffer !== "undefined")
+        }
+      `);
+
+        const childProcess = await runFile(tmpFilePath);
+
+        expect(childProcess.stdout).toBeDefined();
+        let stdout = await collectStreamChunks(childProcess.stdout!);
+        expect(stdout).toEqual('true\n');
+      }
+    );
+
+    statefulTest(
+      'should allow importing from node buildin modules',
+      async function*() {
+        const tmpFilePath = yield* fixtureFile(`
+					import {readFile} from "fs";
+					import { Readable } from "stream";
+					import { request } from "http";
+
+					export default () => {
+						console.log(typeof readFile !== "undefined")
+						console.log(typeof Readable !== "undefined")
+						console.log(typeof request !== "undefined")
+					}
+				`);
+
+        const childProcess = await runFile(tmpFilePath);
+
+        expect(childProcess.stdout).toBeDefined();
+        let stdout = await collectStreamChunks(childProcess.stdout!);
+        expect(stdout).toEqual('true\ntrue\ntrue\n');
+      }
+    );
   });
 });

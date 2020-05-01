@@ -21,6 +21,9 @@ import axios from 'axios';
 import { resolve as urlResolve } from 'url';
 import { bundlePath } from './bundlePath';
 
+const modulesForNodeGlobals = ['buffer'];
+const nodeBuildinModules = ['fs', 'stream', 'http'];
+
 export async function buildFile(path: string): Promise<string> {
   const fileContents = path.startsWith('/')
     ? readFileSync(path, 'utf8')
@@ -38,7 +41,7 @@ export async function buildFile(path: string): Promise<string> {
 
   for (const dependency of importDeclarations) {
     const dependencyPath = dependency.source.value;
-    const dependencyURI = dependencyPath.startsWith('http')
+    const dependencyURI = dependencyPath.startsWith('http://')
       ? dependencyPath
       : dependencyPath.startsWith('.')
       ? path.startsWith('/')
@@ -67,6 +70,13 @@ export async function buildFile(path: string): Promise<string> {
         visitor: {
           ImportDeclaration(path: NodePath<ImportDeclaration>, state: any) {
             const dependencyPath = path.node.source.value;
+            if (
+              modulesForNodeGlobals.includes(dependencyPath) ||
+              nodeBuildinModules.includes(dependencyPath)
+            ) {
+              return;
+            }
+
             if (dependenciesToOutputFiles.has(dependencyPath)) {
               path.node.source = stringLiteral(
                 dependenciesToOutputFiles.get(dependencyPath)
