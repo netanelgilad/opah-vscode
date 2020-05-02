@@ -20,6 +20,7 @@ import { resolve, dirname } from 'path';
 import axios from 'axios';
 import { resolve as urlResolve } from 'url';
 import { bundlePath } from './bundlePath';
+import generate from '@babel/generator';
 
 const modulesForNodeGlobals = ['buffer'];
 const nodeBuildinModules = ['fs', 'stream', 'http'];
@@ -74,6 +75,27 @@ export async function buildFile(path: string): Promise<string> {
               modulesForNodeGlobals.includes(dependencyPath) ||
               nodeBuildinModules.includes(dependencyPath)
             ) {
+              return;
+            }
+
+            if (dependencyPath === 'bundler') {
+              const localName = path.node.specifiers[0].local.name;
+              const binding = path.scope.getBinding(localName)!;
+              for (const referenceToBundlePath of binding.referencePaths) {
+                const callExpression = referenceToBundlePath.parentPath as NodePath<
+                  types.CallExpression
+                >;
+                const toBundle = callExpression.get('arguments.0') as NodePath;
+                const bundledProgram = bundlePath(
+                  toBundle,
+                  state.file.path.get('program')
+                );
+                const code = generate(bundledProgram).code;
+                referenceToBundlePath.parentPath.replaceWith(
+                  types.stringLiteral(code)
+                );
+              }
+              path.remove();
               return;
             }
 
