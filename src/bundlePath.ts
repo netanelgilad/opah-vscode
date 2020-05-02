@@ -7,6 +7,8 @@ import {
   isStatement,
   Expression,
   Program,
+  isImportNamespaceSpecifier,
+  ImportDeclaration,
 } from '@babel/types';
 
 export function bundlePath(
@@ -25,6 +27,14 @@ export function bundlePath(
         );
       } else {
         if (binding.scope === programPath.scope) {
+          if (isImportNamespaceSpecifier(binding.path.node)) {
+            if (
+              (binding.path.parent as ImportDeclaration).source.value ===
+              'console'
+            ) {
+              return;
+            }
+          }
           outOfScopeBindings.add(binding);
         } else {
           if (!isChildScope(binding.scope, pathToBundle.scope)) {

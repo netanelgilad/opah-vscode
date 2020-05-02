@@ -1,12 +1,8 @@
 import traverse, { NodePath } from '@babel/traverse';
-import {
-  VariableDeclarator,
-  Program,
-  Identifier,
-  VariableDeclaration,
-} from '@babel/types';
+import { VariableDeclarator, Program, Identifier } from '@babel/types';
 import { bundlePath } from './bundlePath';
-import { parseSync, transformFromAstSync } from '@babel/core';
+import { parseSync } from '@babel/core';
+import { tuple } from '@deaven/tuple';
 
 describe(bundlePath, () => {
   test('should bundle a file scoped binding', () => {
@@ -16,27 +12,12 @@ describe(bundlePath, () => {
       }
       const b = 6;
       const c = a;
-    `;
+		`;
 
-    const ast = parseSync(code, {
-      filename: 'a.ts',
-    })!;
-
-    let pathToBundle: NodePath;
-    let programPath: NodePath<Program>;
-    traverse(ast, {
-      Program: path => {
-        programPath = path;
-      },
-      VariableDeclaration: function(path) {
-        if (
-          ((path.get('declarations.0') as NodePath<VariableDeclarator>).node
-            .id as Identifier).name === 'c'
-        ) {
-          pathToBundle = path;
-        }
-      },
-    });
+    const [
+      pathToBundle,
+      programPath,
+    ] = extractPathToBundleAndProgramPathFromCode(code, 'c');
 
     expect(bundlePath(pathToBundle!, programPath!)).toMatchSnapshot();
   });
@@ -47,41 +28,10 @@ describe(bundlePath, () => {
       const c = a;
     `;
 
-    const ast = parseSync(code, {
-      filename: 'a.ts',
-    })!;
-
-    let pathToBundle: NodePath;
-    let programPath: NodePath<Program>;
-    transformFromAstSync(ast, '', {
-      filename: 'a.ts',
-      presets: [
-        '@babel/preset-typescript',
-        [
-          '@babel/preset-env',
-          {
-            targets: ['current node'],
-          },
-        ],
-      ],
-      plugins: [
-        () => ({
-          visitor: {
-            Program: (path: NodePath<Program>) => {
-              programPath = path;
-            },
-            VariableDeclaration: (path: NodePath<VariableDeclaration>) => {
-              if (
-                ((path.get('declarations.0') as NodePath<VariableDeclarator>)
-                  .node.id as Identifier).name === 'c'
-              ) {
-                pathToBundle = path;
-              }
-            },
-          },
-        }),
-      ],
-    });
+    const [
+      pathToBundle,
+      programPath,
+    ] = extractPathToBundleAndProgramPathFromCode(code, 'c');
 
     expect(() => bundlePath(pathToBundle!, programPath!)).toThrowError();
   });
@@ -97,44 +47,57 @@ describe(bundlePath, () => {
           const h = e;
         }
       }
-    `;
+		`;
 
-    const ast = parseSync(code, {
-      filename: 'a.ts',
-    })!;
-
-    let pathToBundle: NodePath;
-    let programPath: NodePath<Program>;
-    transformFromAstSync(ast, '', {
-      filename: 'a.ts',
-      presets: [
-        '@babel/preset-typescript',
-        [
-          '@babel/preset-env',
-          {
-            targets: ['current node'],
-          },
-        ],
-      ],
-      plugins: [
-        () => ({
-          visitor: {
-            Program: (path: NodePath<Program>) => {
-              programPath = path;
-            },
-            VariableDeclaration: (path: NodePath<VariableDeclaration>) => {
-              if (
-                ((path.get('declarations.0') as NodePath<VariableDeclarator>)
-                  .node.id as Identifier).name === 'h'
-              ) {
-                pathToBundle = path;
-              }
-            },
-          },
-        }),
-      ],
-    });
+    const [
+      pathToBundle,
+      programPath,
+    ] = extractPathToBundleAndProgramPathFromCode(code, 'h');
 
     expect(() => bundlePath(pathToBundle!, programPath!)).toThrowError();
   });
+
+  describe('builtin modules', () => {
+    test('importing the console module', () => {
+      const code = `
+				import * as console from "console";
+
+				const b = console;
+			`;
+
+      const [
+        pathToBundle,
+        programPath,
+      ] = extractPathToBundleAndProgramPathFromCode(code, 'b');
+
+      expect(bundlePath(pathToBundle!, programPath!)).toMatchSnapshot();
+    });
+  });
 });
+
+function extractPathToBundleAndProgramPathFromCode(
+  code: string,
+  identifier: string
+) {
+  const ast = parseSync(code, {
+    filename: 'a.ts',
+  })!;
+
+  let pathToBundle: NodePath;
+  let programPath: NodePath<Program>;
+  traverse(ast, {
+    Program: path => {
+      programPath = path;
+    },
+    VariableDeclaration: function(path) {
+      if (
+        ((path.get('declarations.0') as NodePath<VariableDeclarator>).node
+          .id as Identifier).name === identifier
+      ) {
+        pathToBundle = path;
+      }
+    },
+  });
+
+  return tuple(pathToBundle, programPath);
+}

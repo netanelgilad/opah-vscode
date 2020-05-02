@@ -1,5 +1,83 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
+exports[`bundlePath builtin modules importing the console module 1`] = `
+Object {
+  "body": Array [
+    Node {
+      "declarations": Array [
+        Node {
+          "end": 63,
+          "id": Node {
+            "end": 53,
+            "loc": SourceLocation {
+              "end": Position {
+                "column": 11,
+                "line": 4,
+              },
+              "identifierName": "b",
+              "start": Position {
+                "column": 10,
+                "line": 4,
+              },
+            },
+            "name": "b",
+            "start": 52,
+            "type": "Identifier",
+          },
+          "init": Node {
+            "end": 63,
+            "loc": SourceLocation {
+              "end": Position {
+                "column": 21,
+                "line": 4,
+              },
+              "identifierName": "console",
+              "start": Position {
+                "column": 14,
+                "line": 4,
+              },
+            },
+            "name": "console",
+            "start": 56,
+            "type": "Identifier",
+          },
+          "loc": SourceLocation {
+            "end": Position {
+              "column": 21,
+              "line": 4,
+            },
+            "start": Position {
+              "column": 10,
+              "line": 4,
+            },
+          },
+          "start": 52,
+          "type": "VariableDeclarator",
+        },
+      ],
+      "end": 64,
+      "kind": "const",
+      "loc": SourceLocation {
+        "end": Position {
+          "column": 22,
+          "line": 4,
+        },
+        "start": Position {
+          "column": 4,
+          "line": 4,
+        },
+      },
+      "start": 46,
+      "type": "VariableDeclaration",
+    },
+  ],
+  "directives": Array [],
+  "interpreter": null,
+  "sourceType": "script",
+  "type": "Program",
+}
+`;
+
 exports[`bundlePath should bundle a file scoped binding 1`] = `
 Object {
   "body": Array [
