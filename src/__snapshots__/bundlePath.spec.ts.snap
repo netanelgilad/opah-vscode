@@ -207,3 +207,139 @@ Object {
   "type": "Program",
 }
 `;
+
+exports[`bundlePath should bunlde variable declarations 1`] = `
+Object {
+  "body": Array [
+    Object {
+      "declarations": Array [
+        Node {
+          "end": 18,
+          "id": Node {
+            "end": 14,
+            "loc": SourceLocation {
+              "end": Position {
+                "column": 13,
+                "line": 2,
+              },
+              "identifierName": "b",
+              "start": Position {
+                "column": 12,
+                "line": 2,
+              },
+            },
+            "name": "b",
+            "start": 13,
+            "type": "Identifier",
+          },
+          "init": Node {
+            "end": 18,
+            "extra": Object {
+              "raw": "1",
+              "rawValue": 1,
+            },
+            "loc": SourceLocation {
+              "end": Position {
+                "column": 17,
+                "line": 2,
+              },
+              "start": Position {
+                "column": 16,
+                "line": 2,
+              },
+            },
+            "start": 17,
+            "type": "NumericLiteral",
+            "value": 1,
+          },
+          "loc": SourceLocation {
+            "end": Position {
+              "column": 17,
+              "line": 2,
+            },
+            "start": Position {
+              "column": 12,
+              "line": 2,
+            },
+          },
+          "start": 13,
+          "type": "VariableDeclarator",
+        },
+      ],
+      "kind": "const",
+      "type": "VariableDeclaration",
+    },
+    Node {
+      "declarations": Array [
+        Node {
+          "end": 37,
+          "id": Node {
+            "end": 33,
+            "loc": SourceLocation {
+              "end": Position {
+                "column": 13,
+                "line": 3,
+              },
+              "identifierName": "c",
+              "start": Position {
+                "column": 12,
+                "line": 3,
+              },
+            },
+            "name": "c",
+            "start": 32,
+            "type": "Identifier",
+          },
+          "init": Node {
+            "end": 37,
+            "loc": SourceLocation {
+              "end": Position {
+                "column": 17,
+                "line": 3,
+              },
+              "identifierName": "b",
+              "start": Position {
+                "column": 16,
+                "line": 3,
+              },
+            },
+            "name": "b",
+            "start": 36,
+            "type": "Identifier",
+          },
+          "loc": SourceLocation {
+            "end": Position {
+              "column": 17,
+              "line": 3,
+            },
+            "start": Position {
+              "column": 12,
+              "line": 3,
+            },
+          },
+          "start": 32,
+          "type": "VariableDeclarator",
+        },
+      ],
+      "end": 38,
+      "kind": "const",
+      "loc": SourceLocation {
+        "end": Position {
+          "column": 18,
+          "line": 3,
+        },
+        "start": Position {
+          "column": 6,
+          "line": 3,
+        },
+      },
+      "start": 26,
+      "type": "VariableDeclaration",
+    },
+  ],
+  "directives": Array [],
+  "interpreter": null,
+  "sourceType": "script",
+  "type": "Program",
+}
+`;

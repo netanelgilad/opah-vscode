@@ -22,6 +22,20 @@ describe(bundlePath, () => {
     expect(bundlePath(pathToBundle!, programPath!)).toMatchSnapshot();
   });
 
+  test('should bundle variable declarations', () => {
+    const code = `
+      const b = 1;
+      const c = b;
+		`;
+
+    const [
+      pathToBundle,
+      programPath,
+    ] = extractPathToBundleAndProgramPathFromCode(code, 'c');
+
+    expect(bundlePath(pathToBundle!, programPath!)).toMatchSnapshot();
+  });
+
   test('should throw an error on undeclared reference', () => {
     const code = `
       const b = 6;

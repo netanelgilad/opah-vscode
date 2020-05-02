@@ -9,6 +9,8 @@ import {
   Program,
   isImportNamespaceSpecifier,
   ImportDeclaration,
+  isVariableDeclarator,
+  variableDeclaration,
 } from '@babel/types';
 
 export function bundlePath(
@@ -51,6 +53,12 @@ export function bundlePath(
   return program(
     Array.from(outOfScopeBindings)
       .map(binding => binding.path.node as Statement)
+      .map(node => {
+        if (isVariableDeclarator(node)) {
+          return variableDeclaration('const', [node]);
+        }
+        return node;
+      })
       .concat([
         isStatement(pathToBundle.node)
           ? pathToBundle.node
