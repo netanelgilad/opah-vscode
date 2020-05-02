@@ -208,7 +208,96 @@ Object {
 }
 `;
 
-exports[`bundlePath should bunlde variable declarations 1`] = `
+exports[`bundlePath should bundle identifier 1`] = `
+Object {
+  "body": Array [
+    Object {
+      "declarations": Array [
+        Node {
+          "end": 18,
+          "id": Node {
+            "end": 14,
+            "loc": SourceLocation {
+              "end": Position {
+                "column": 13,
+                "line": 2,
+              },
+              "identifierName": "b",
+              "start": Position {
+                "column": 12,
+                "line": 2,
+              },
+            },
+            "name": "b",
+            "start": 13,
+            "type": "Identifier",
+          },
+          "init": Node {
+            "end": 18,
+            "extra": Object {
+              "raw": "1",
+              "rawValue": 1,
+            },
+            "loc": SourceLocation {
+              "end": Position {
+                "column": 17,
+                "line": 2,
+              },
+              "start": Position {
+                "column": 16,
+                "line": 2,
+              },
+            },
+            "start": 17,
+            "type": "NumericLiteral",
+            "value": 1,
+          },
+          "loc": SourceLocation {
+            "end": Position {
+              "column": 17,
+              "line": 2,
+            },
+            "start": Position {
+              "column": 12,
+              "line": 2,
+            },
+          },
+          "start": 13,
+          "type": "VariableDeclarator",
+        },
+      ],
+      "kind": "const",
+      "type": "VariableDeclaration",
+    },
+    Object {
+      "expression": Node {
+        "end": 27,
+        "loc": SourceLocation {
+          "end": Position {
+            "column": 7,
+            "line": 3,
+          },
+          "identifierName": "b",
+          "start": Position {
+            "column": 6,
+            "line": 3,
+          },
+        },
+        "name": "b",
+        "start": 26,
+        "type": "Identifier",
+      },
+      "type": "ExpressionStatement",
+    },
+  ],
+  "directives": Array [],
+  "interpreter": null,
+  "sourceType": "script",
+  "type": "Program",
+}
+`;
+
+exports[`bundlePath should bundle variable declarations 1`] = `
 Object {
   "body": Array [
     Object {

@@ -1,5 +1,10 @@
 import traverse, { NodePath } from '@babel/traverse';
-import { VariableDeclarator, Program, Identifier } from '@babel/types';
+import {
+  VariableDeclarator,
+  Program,
+  Identifier,
+  isStatement,
+} from '@babel/types';
 import { bundlePath } from './bundlePath';
 import { parseSync } from '@babel/core';
 import { tuple } from '@deaven/tuple';
@@ -32,6 +37,32 @@ describe(bundlePath, () => {
       pathToBundle,
       programPath,
     ] = extractPathToBundleAndProgramPathFromCode(code, 'c');
+
+    expect(bundlePath(pathToBundle!, programPath!)).toMatchSnapshot();
+  });
+
+  test('should bundle identifier', () => {
+    const code = `
+      const b = 1;
+      b
+		`;
+
+    const ast = parseSync(code, {
+      filename: 'a.ts',
+    })!;
+
+    let pathToBundle: NodePath;
+    let programPath: NodePath<Program>;
+    traverse(ast, {
+      Program: path => {
+        programPath = path;
+      },
+      Identifier: function(path) {
+        if (isStatement(path.parentPath.node)) {
+          pathToBundle = path;
+        }
+      },
+    });
 
     expect(bundlePath(pathToBundle!, programPath!)).toMatchSnapshot();
   });
