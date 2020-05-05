@@ -12,6 +12,7 @@ it('should run a given function with given parameters from a typescript file', a
   writeFileSync(
     tmpFilePath,
     `
+		 import {console} from "console";
       export const ${exportedFunctionName} = (text) => {
         console.log(text);
       }
@@ -32,6 +33,13 @@ it('should run a given function with given parameters from a typescript file', a
       }
     );
 
+    let stderr = '';
+    for await (const chunk of childProcess.stderr!) {
+      stderr += chunk;
+    }
+
+    expect(stderr).toEqual('');
+
     expect(childProcess.stdout).toBeTruthy();
 
     let output = '';
@@ -40,13 +48,6 @@ it('should run a given function with given parameters from a typescript file', a
     }
 
     expect(output).toEqual(expectedStdout + '\n');
-
-    let stderr = '';
-    for await (const chunk of childProcess.stderr!) {
-      stderr += chunk;
-    }
-
-    expect(stderr).toEqual('');
   } finally {
     unlinkSync(tmpFilePath);
   }

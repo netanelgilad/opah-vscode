@@ -10,7 +10,7 @@ import { parseSync } from '@babel/core';
 import { tuple } from '@deaven/tuple';
 
 describe(bundlePath, () => {
-  test('should bundle a file scoped binding', () => {
+  test('should bundle a file scoped binding', async () => {
     const code = `
       function a() {
 
@@ -24,10 +24,12 @@ describe(bundlePath, () => {
       programPath,
     ] = extractPathToBundleAndProgramPathFromCode(code, 'c');
 
-    expect(bundlePath(pathToBundle!, programPath!)).toMatchSnapshot();
+    expect(
+      await bundlePath(pathToBundle!, programPath!, '/a.ts')
+    ).toMatchInlineSnapshot(`"function a() {}\\\\n\\\\nconst c = a;"`);
   });
 
-  test('should bundle variable declarations', () => {
+  test('should bundle variable declarations', async () => {
     const code = `
       const b = 1;
       const c = b;
@@ -38,10 +40,29 @@ describe(bundlePath, () => {
       programPath,
     ] = extractPathToBundleAndProgramPathFromCode(code, 'c');
 
-    expect(bundlePath(pathToBundle!, programPath!)).toMatchSnapshot();
+    expect(
+      await bundlePath(pathToBundle!, programPath!, '/a.ts')
+    ).toMatchInlineSnapshot(`"const b = 1;\\\\nconst c = b;"`);
   });
 
-  test('should bundle identifier', () => {
+  test('should bundle transitive variable declarations', async () => {
+    const code = `
+		  const a = 1;
+      const b = a;
+      const c = b;
+		`;
+
+    const [
+      pathToBundle,
+      programPath,
+    ] = extractPathToBundleAndProgramPathFromCode(code, 'c');
+
+    expect(
+      await bundlePath(pathToBundle!, programPath!, '/a.ts')
+    ).toMatchInlineSnapshot(`"const a = 1;\\\\nconst b = a;\\\\nconst c = b;"`);
+  });
+
+  test('should bundle identifier', async () => {
     const code = `
       const b = 1;
       b
@@ -64,10 +85,12 @@ describe(bundlePath, () => {
       },
     });
 
-    expect(bundlePath(pathToBundle!, programPath!)).toMatchSnapshot();
+    expect(
+      await bundlePath(pathToBundle!, programPath!, '/a.ts')
+    ).toMatchInlineSnapshot(`"const b = 1;\\\\nb;"`);
   });
 
-  test('should throw an error on undeclared reference', () => {
+  test('should throw an error on undeclared reference', async () => {
     const code = `
       const b = 6;
       const c = a;
@@ -78,10 +101,12 @@ describe(bundlePath, () => {
       programPath,
     ] = extractPathToBundleAndProgramPathFromCode(code, 'c');
 
-    expect(() => bundlePath(pathToBundle!, programPath!)).toThrowError();
+    await expect(
+      bundlePath(pathToBundle!, programPath!, '/a.ts')
+    ).rejects.toThrowError();
   });
 
-  test('should throw an error on a reference to a non program scoped binding', () => {
+  test('should throw an error on a reference to a non program scoped binding', async () => {
     const code = `
       const b = 6;
       const c = a;
@@ -99,11 +124,13 @@ describe(bundlePath, () => {
       programPath,
     ] = extractPathToBundleAndProgramPathFromCode(code, 'h');
 
-    expect(() => bundlePath(pathToBundle!, programPath!)).toThrowError();
+    await expect(
+      bundlePath(pathToBundle!, programPath!, '/a.ts')
+    ).rejects.toThrowError();
   });
 
   describe('builtin modules', () => {
-    test('importing the console module', () => {
+    test('importing the console module', async () => {
       const code = `
 				import * as console from "console";
 
@@ -115,7 +142,9 @@ describe(bundlePath, () => {
         programPath,
       ] = extractPathToBundleAndProgramPathFromCode(code, 'b');
 
-      expect(bundlePath(pathToBundle!, programPath!)).toMatchSnapshot();
+      expect(
+        await bundlePath(pathToBundle!, programPath!, '/a.ts')
+      ).toMatchInlineSnapshot(`"const b = console;"`);
     });
   });
 });

@@ -16,6 +16,7 @@ describe('runFile', () => {
       const expectedStdout = chance.string();
 
       const tmpFilePath = yield* fixtureFile(`
+				import {console} from "console";
         export default () => {
           const text: string = '${expectedStdout}';
           console.log(text);
@@ -36,6 +37,7 @@ describe('runFile', () => {
 
     yield* fixtureFile(
       `
+				import {console} from "console";
         export default () => {
           const text: string = '${expectedStdout}';
           console.log(text);
@@ -61,10 +63,11 @@ describe('runFile', () => {
 
       const tmpFilePath = yield* fixtureFile(
         `
-      export const ${exportedFunctionName} = () => {
-        const text: string = '${expectedStdout}';
-        console.log(text);
-      }
+				import {console} from "console";
+      	export const ${exportedFunctionName} = () => {
+					const text: string = '${expectedStdout}';
+					console.log(text);
+				}
       `
       );
 
@@ -87,9 +90,10 @@ describe('runFile', () => {
 
       const tmpFilePath = yield* fixtureFile(
         `
-      export const ${exportedFunctionName} = (text) => {
-        console.log(text);
-      }
+				import {console} from "console";
+				export const ${exportedFunctionName} = (text) => {
+					console.log(text);
+				}
     `
       );
 
@@ -124,9 +128,10 @@ describe('runFile', () => {
 
         yield* fixtureFile(
           `
-        export function foo() {
-          console.log('${expectedStdout}');
-        }
+					import {console} from "console";
+					export function foo() {
+						console.log('${expectedStdout}');
+					}
       `,
           join(tmpDirectory, 'dependency.ts')
         );
@@ -147,6 +152,7 @@ describe('runFile', () => {
 
           const httpServerAddress = yield* staticFileServer({
             '/': `
+						import {console} from "console";
             export function foo() {
               console.log('${expectedStdout}');
             }
@@ -187,6 +193,7 @@ describe('runFile', () => {
               }
             `,
             '/dependency.ts': `
+							import {console} from "console";
               export function foo() {
                 console.log('${expectedStdout}');
               }
@@ -213,7 +220,8 @@ describe('runFile', () => {
       'should allow importing Buffer from buffer',
       async function*() {
         const tmpFilePath = yield* fixtureFile(`
-        import {Buffer} from "buffer";
+				import {Buffer} from "buffer";
+				import {console} from "console";
         export default () => {
           console.log(typeof Buffer !== "undefined")
         }
@@ -234,6 +242,7 @@ describe('runFile', () => {
 					import {readFile} from "fs";
 					import { Readable } from "stream";
 					import { request } from "http";
+					import {console} from "console";
 
 					export default () => {
 						console.log(typeof readFile !== "undefined")

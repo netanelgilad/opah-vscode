@@ -10,7 +10,8 @@ describe('runFile', () => {
 
     yield* fixtureFile(
       `
-        import { createMacro } from '@depno/macros';
+				import { createMacro } from 'macros';
+				import { console } from "console";
 
         const LocationBasedSymbol = createMacro(({ reference, types, state }) => {
           reference.parentPath.replaceWith(
@@ -40,7 +41,7 @@ describe('runFile', () => {
 
     expect(childProcess.stdout).toBeDefined();
     let stdout = await collectStreamChunks(childProcess.stdout!);
-    expect(stdout).toEqual(`Symbol(${tmpFilePath}:19:22)\n`);
+    expect(stdout).toEqual(`Symbol(${tmpFilePath}:20:22)\n`);
   });
 
   statefulTest(
@@ -52,14 +53,15 @@ describe('runFile', () => {
         `
       import { createMacro } from '@depno/macros';
       import { CallExpression, Node, Identifier } from "@babel/types";
-      import { NodePath } from "@babel/core";
-      
+			import { NodePath } from "@babel/core";
+			import { console } from "console";
+
       type TContext = {
         reference: NodePath<Identifier>,
         types: typeof import("@babel/types"),
         state: any
       }
-      
+
       function functionMacro(fn: (context: TContext, ...args: Node[]) => Node) {
         return (context) => {
           const callExpression = context.reference.parentPath.node as CallExpression;
@@ -68,7 +70,7 @@ describe('runFile', () => {
           context.reference.parentPath.replaceWith(toReplace);
         }
       }
-      
+
       const LocationBasedSymbol = createMacro(functionMacro(({ reference, types, state }) => {
         return types.callExpression(types.identifier('Symbol'), [
           types.stringLiteral(
@@ -80,7 +82,7 @@ describe('runFile', () => {
           ),
         ])
       }));
-      
+
       export default () => {
         console.log(LocationBasedSymbol());
       };
@@ -95,7 +97,7 @@ describe('runFile', () => {
 
       expect(childProcess.stdout).toBeDefined();
       let stdout = await collectStreamChunks(childProcess.stdout!);
-      expect(stdout).toEqual(`Symbol(${tmpFilePath}:34:20)\n`);
+      expect(stdout).toEqual(`Symbol(${tmpFilePath}:35:20)\n`);
     }
   );
 });
