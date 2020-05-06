@@ -144,6 +144,41 @@ describe('runFile', () => {
       }
     );
 
+    statefulTest(
+      'should run a file that imports deafult from a dependency',
+      async function*() {
+        const tmpDirectory = directory();
+        const expectedStdout = chance.string();
+
+        const dependantFilePath = yield* fixtureFile(
+          `
+        import foo from "./dependency.ts";
+
+        export default () => {
+          foo();
+        }
+      `,
+          join(tmpDirectory, 'dependant.ts')
+        );
+
+        yield* fixtureFile(
+          `
+					import {console} from "console";
+					export default function () {
+						console.log('${expectedStdout}');
+					}
+      `,
+          join(tmpDirectory, 'dependency.ts')
+        );
+
+        const childProcess = await runFile(dependantFilePath);
+
+        expect(childProcess.stdout).toBeDefined();
+        let stdout = await collectStreamChunks(childProcess.stdout!);
+        expect(stdout).toEqual(expectedStdout + '\n');
+      }
+    );
+
     describe('using http(/s) protocol', () => {
       statefulTest(
         'should run a file with an http dependency',

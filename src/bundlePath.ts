@@ -30,6 +30,8 @@ import {
   CallExpression,
   templateLiteral,
   templateElement,
+  isImportDefaultSpecifier,
+  functionExpression,
 } from '@babel/types';
 import * as types from '@babel/types';
 import { getContentsFromURI } from './getContentsFromURI';
@@ -73,12 +75,12 @@ function validateBinding(
   }
 }
 
-async function bundlePathDependencies(
+async function bundleDefinitionsForPath(
   pathToBundle: NodePath,
   programPath: NodePath<Program>,
-  currentURI: string
+  currentURI: string,
+  wantedName?: string
 ): Promise<Statement[]> {
-  const outOfScopeBindings = new Set<Binding>();
   if (isIdentifier(pathToBundle.node)) {
     const binding = programPath.scope.getBinding(pathToBundle.node.name);
     if (
@@ -89,10 +91,11 @@ async function bundlePathDependencies(
         pathToBundle
       )
     ) {
-      return bundlePathDependencies(binding!.path, programPath, currentURI);
+      return bundleDefinitionsForPath(binding!.path, programPath, currentURI);
     }
   }
 
+  const outOfScopeBindings = new Set<Binding>();
   pathToBundle.traverse({
     // @ts-ignore
     ReferencedIdentifier(path: NodePath<Identifier>) {
@@ -110,9 +113,12 @@ async function bundlePathDependencies(
   )) {
     if (isVariableDeclarator(path.node)) {
       statements.push(
-        ...(await bundlePathDependencies(path, programPath, currentURI))
+        ...(await bundleDefinitionsForPath(path, programPath, currentURI))
       );
-    } else if (isImportSpecifier(path.node)) {
+    } else if (
+      isImportSpecifier(path.node) ||
+      isImportDefaultSpecifier(path.node)
+    ) {
       const dependencyPath = (path.parentPath as NodePath<ImportDeclaration>)
         .node.source.value;
       const dependencyURI = dependencyPath.startsWith('http://')
@@ -134,9 +140,18 @@ async function bundlePathDependencies(
         traverse((ast as unknown) as File, {
           Program(programPath: NodePath<Program>) {
             dependencyProgramPath = programPath;
-            const dependencyBinding = programPath.scope.getBinding(
-              (path.node as ImportSpecifier).imported.name
-            );
+            let dependencyBinding;
+            if (isImportDefaultSpecifier(path.node)) {
+              programPath.traverse({
+                ExportDefaultDeclaration: p => {
+                  dependencyBinding = { path: p };
+                },
+              });
+            } else {
+              dependencyBinding = programPath.scope.getBinding(
+                (path.node as ImportSpecifier).imported.name
+              );
+            }
             if (!dependencyBinding) {
               throw path.buildCodeFrameError(
                 `Failed to find binding for ${
@@ -150,10 +165,11 @@ async function bundlePathDependencies(
         });
 
         statements.push(
-          ...(await bundlePathDependencies(
+          ...(await bundleDefinitionsForPath(
             dependencyNodePath!,
             dependencyProgramPath!,
-            dependencyURI
+            dependencyURI,
+            path.node.local.name
           ))
         );
       } else if (nodeBuildinModules.includes(dependencyPath)) {
@@ -161,12 +177,7 @@ async function bundlePathDependencies(
           variableDeclaration('const', [
             variableDeclarator(
               objectPattern([
-                objectProperty(
-                  path.node.imported,
-                  path.node.imported,
-                  false,
-                  true
-                ),
+                objectProperty(path.node.local, path.node.local, false, true),
               ]),
               callExpression(identifier('require'), [
                 stringLiteral(dependencyPath),
@@ -201,20 +212,39 @@ async function bundlePathDependencies(
     }
   } else if (isFunctionDeclaration(pathToBundle.node)) {
     statements.push(pathToBundle.node);
+  } else if (isExportDefaultDeclaration(pathToBundle.node)) {
+    if (wantedName) {
+      statements.push(
+        variableDeclaration('const', [
+          variableDeclarator(
+            identifier(wantedName),
+            isFunctionDeclaration(pathToBundle.node.declaration)
+              ? functionExpression(
+                  pathToBundle.node.declaration.id,
+                  pathToBundle.node.declaration.params,
+                  pathToBundle.node.declaration.body,
+                  pathToBundle.node.declaration.generator,
+                  pathToBundle.node.declaration.async
+                )
+              : (pathToBundle.node.declaration as Expression)
+          ),
+        ])
+      );
+    }
   }
 
   return statements;
 }
 
-export async function bundlePath(
+async function bundleIntoASingleProgram(
   pathToBundle: NodePath,
   programPath: NodePath<Program>,
-  currentURI: string
+  uri: string
 ) {
-  const definitions = await bundlePathDependencies(
+  const definitions = await bundleDefinitionsForPath(
     pathToBundle,
     programPath,
-    currentURI
+    uri
   );
 
   const pathValueStatement = isStatement(pathToBundle.node)
@@ -230,7 +260,19 @@ export async function bundlePath(
       )
     : expressionStatement(pathToBundle.node as Expression);
 
-  const programBeforeMacros = program(definitions.concat([pathValueStatement]));
+  return program(definitions.concat([pathValueStatement]));
+}
+
+export async function bundlePath(
+  pathToBundle: NodePath,
+  programPath: NodePath<Program>,
+  currentURI: string
+) {
+  const programBeforeMacros = await bundleIntoASingleProgram(
+    pathToBundle,
+    programPath,
+    currentURI
+  );
 
   const { code } = (await transformFromAstAsync(
     programBeforeMacros!,
