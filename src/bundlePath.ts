@@ -32,6 +32,7 @@ import {
   templateElement,
   isImportDefaultSpecifier,
   functionExpression,
+  Node,
 } from '@babel/types';
 import * as types from '@babel/types';
 import { getContentsFromURI } from './getContentsFromURI';
@@ -80,11 +81,29 @@ function validateBinding(
   }
 }
 
+export function getDefinitionNameFromNode(node: Node) {
+  if (isVariableDeclarator(node)) {
+    return (node.id as Identifier).name;
+  } else if (types.isExportDefaultDeclaration(node)) {
+    return 'default';
+  } else if (isFunctionDeclaration(node)) {
+    return node.id!.name;
+  } else if (types.isVariableDeclaration(node)) {
+    return (node.declarations[0].id as Identifier).name;
+  } else if (isIdentifier(node)) {
+    return node.name;
+  }
+  throw new Error(
+    `Don't know how to getDefinitionNameFromNode for node of type ${node.type}`
+  );
+}
+
 async function bundleDefinitionsForPath(
   pathToBundle: NodePath,
   programPath: NodePath<Program>,
   currentURI: string,
-  wantedName?: string
+  wantedName?: string,
+  bundledDefinitions: string[] = []
 ): Promise<Statement[]> {
   if (isIdentifier(pathToBundle.node)) {
     const binding = programPath.scope.getBinding(pathToBundle.node.name);
@@ -96,9 +115,27 @@ async function bundleDefinitionsForPath(
         pathToBundle
       )
     ) {
-      return bundleDefinitionsForPath(binding!.path, programPath, currentURI);
+      return bundleDefinitionsForPath(
+        binding!.path,
+        programPath,
+        currentURI,
+        undefined,
+        bundledDefinitions
+      );
     }
   }
+
+  if (
+    bundledDefinitions.includes(
+      `${currentURI}#${getDefinitionNameFromNode(pathToBundle.node)}`
+    )
+  ) {
+    return [];
+  }
+
+  bundledDefinitions.push(
+    `${currentURI}#${getDefinitionNameFromNode(pathToBundle.node)}`
+  );
 
   const outOfScopeBindings = new Set<Binding>();
   pathToBundle.traverse({
@@ -121,7 +158,13 @@ async function bundleDefinitionsForPath(
   )) {
     if (isVariableDeclarator(path.node) || isFunctionDeclaration(path.node)) {
       statements.push(
-        ...(await bundleDefinitionsForPath(path, programPath, currentURI))
+        ...(await bundleDefinitionsForPath(
+          path,
+          programPath,
+          currentURI,
+          undefined,
+          bundledDefinitions
+        ))
       );
     } else if (
       isImportSpecifier(path.node) ||
@@ -189,7 +232,8 @@ async function bundleDefinitionsForPath(
             dependencyNodePath!,
             dependencyProgramPath!,
             dependencyURI,
-            path.node.local.name
+            path.node.local.name,
+            bundledDefinitions
           ))
         );
       } else if (nodeBuildinModules.includes(dependencyPath)) {

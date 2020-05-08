@@ -153,6 +153,33 @@ describe(bundlePath, () => {
     );
   });
 
+  test('should not bundle the same definition more than once', async () => {
+    const code = `
+			const c = 1;
+
+			function d() {
+				return c;
+			}
+
+			function a() {
+				return c + d();
+			}
+
+			const b = a();
+		`;
+
+    const [
+      pathToBundle,
+      programPath,
+    ] = extractPathToBundleAndProgramPathFromCode(code, 'b');
+
+    expect(
+      await bundlePath(pathToBundle!, programPath!, '/a.ts')
+    ).toMatchInlineSnapshot(
+      `"const c = 1;\\\\n\\\\nfunction d() {\\\\n  return c;\\\\n}\\\\n\\\\nfunction a() {\\\\n  return c + d();\\\\n}\\\\n\\\\nconst b = a();"`
+    );
+  });
+
   describe('builtin modules', () => {
     test('importing the console module', async () => {
       const code = `
