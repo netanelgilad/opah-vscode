@@ -136,7 +136,7 @@ async function bundleDefinitionsForPath(
           presets: [
             require('@babel/preset-typescript'),
             [
-              '@babel/preset-env',
+              require('@babel/preset-env'),
               {
                 targets: {
                   node: 'current',
