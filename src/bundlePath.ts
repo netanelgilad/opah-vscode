@@ -35,7 +35,7 @@ import {
 } from '@babel/types';
 import * as types from '@babel/types';
 import { getContentsFromURI } from './getContentsFromURI';
-import { parseAsync, transformFromAstAsync } from '@babel/core';
+import { transformFromAstAsync, transformAsync } from '@babel/core';
 import { resolve, dirname } from 'path';
 import { resolve as urlResolve } from 'url';
 import traverse from '@babel/traverse';
@@ -130,10 +130,22 @@ async function bundleDefinitionsForPath(
         : undefined;
       if (dependencyURI) {
         const code = await getContentsFromURI(dependencyURI);
-        const ast = await parseAsync(code, {
+        const { ast } = (await transformAsync(code, {
           filename: dependencyURI,
-          presets: [require('@babel/preset-typescript')],
-        })!;
+          ast: true,
+          presets: [
+            require('@babel/preset-typescript'),
+            [
+              '@babel/preset-env',
+              {
+                targets: {
+                  node: 'current',
+                },
+                modules: false,
+              },
+            ],
+          ],
+        }))!;
 
         let dependencyNodePath: NodePath;
         let dependencyProgramPath: NodePath<Program>;

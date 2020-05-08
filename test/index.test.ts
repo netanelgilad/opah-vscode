@@ -31,6 +31,27 @@ describe('runFile', () => {
     }
   );
 
+  statefulTest('should ignore types when bundling', async function*() {
+    const expectedStdout = chance.string();
+
+    const tmpFilePath = yield* fixtureFile(`
+				import {console} from "console";
+
+				type MyType = string;
+
+        export default () => {
+          const text: MyType = '${expectedStdout}';
+          console.log(text);
+        }
+      `);
+
+    const childProcess = await runFile(tmpFilePath);
+
+    expect(childProcess.stdout).toBeDefined();
+    let stdout = await collectStreamChunks(childProcess.stdout!);
+    expect(stdout).toEqual(expectedStdout + '\n');
+  });
+
   statefulTest('should run a relative typecript file', async function*() {
     const tmpDirectory = directory();
     const expectedStdout = chance.string();
@@ -131,6 +152,44 @@ describe('runFile', () => {
 					import {console} from "console";
 					export function foo() {
 						console.log('${expectedStdout}');
+					}
+      `,
+          join(tmpDirectory, 'dependency.ts')
+        );
+
+        const childProcess = await runFile(dependantFilePath);
+
+        expect(childProcess.stdout).toBeDefined();
+        let stdout = await collectStreamChunks(childProcess.stdout!);
+        expect(stdout).toEqual(expectedStdout + '\n');
+      }
+    );
+
+    statefulTest(
+      'should ignore types when bundling a dependency',
+      async function*() {
+        const tmpDirectory = directory();
+        const expectedStdout = chance.string();
+
+        const dependantFilePath = yield* fixtureFile(
+          `
+        import {foo} from "./dependency.ts";
+
+        export default () => {
+          foo();
+        }
+      `,
+          join(tmpDirectory, 'dependant.ts')
+        );
+
+        yield* fixtureFile(
+          `
+					import {console} from "console";
+
+					type MyType = string;
+
+					export function foo() {
+						console.log('${expectedStdout}' as MyType);
 					}
       `,
           join(tmpDirectory, 'dependency.ts')

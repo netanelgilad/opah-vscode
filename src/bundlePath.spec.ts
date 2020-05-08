@@ -6,7 +6,7 @@ import {
   isStatement,
 } from '@babel/types';
 import { bundlePath } from './bundlePath';
-import { parseSync } from '@babel/core';
+import { parseSync, transformSync } from '@babel/core';
 import { tuple } from '@deaven/tuple';
 
 describe(bundlePath, () => {
@@ -132,7 +132,7 @@ describe(bundlePath, () => {
   describe('builtin modules', () => {
     test('importing the console module', async () => {
       const code = `
-				import * as console from "console";
+				import { console } from "console";
 
 				const b = console;
 			`;
@@ -153,8 +153,22 @@ function extractPathToBundleAndProgramPathFromCode(
   code: string,
   identifier: string
 ) {
-  const ast = parseSync(code, {
+  const { ast } = transformSync(code, {
     filename: 'a.ts',
+    ast: true,
+    code: false,
+    presets: [
+      require('@babel/preset-typescript'),
+      [
+        '@babel/preset-env',
+        {
+          targets: {
+            node: 'current',
+          },
+          modules: false,
+        },
+      ],
+    ],
   })!;
 
   let pathToBundle: NodePath;

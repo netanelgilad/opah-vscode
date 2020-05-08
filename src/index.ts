@@ -1,5 +1,5 @@
 import { ChildProcess, fork } from 'child_process';
-import { parseAsync, NodePath } from '@babel/core';
+import { NodePath, transformAsync } from '@babel/core';
 import { file } from 'tempy';
 import { writeFileSync } from 'fs';
 import { File } from '@babel/types';
@@ -27,10 +27,22 @@ export async function runFile(
 
   let dependencyNodePath: NodePath;
   let dependencyProgramPath: NodePath<types.Program>;
-  const ast = await parseAsync(code, {
+  const { ast } = (await transformAsync(code, {
     filename: uri,
-    presets: [require('@babel/preset-typescript')],
-  })!;
+    ast: true,
+    presets: [
+      require('@babel/preset-typescript'),
+      [
+        '@babel/preset-env',
+        {
+          targets: {
+            node: 'current',
+          },
+          modules: false,
+        },
+      ],
+    ],
+  }))!;
 
   if (exportedFunctionName === 'default') {
     traverse((ast as unknown) as File, {
