@@ -105,7 +105,10 @@ async function bundleDefinitionsForPath(
     // @ts-ignore
     ReferencedIdentifier(path: NodePath<Identifier>) {
       const binding = path.scope.getBinding(path.node.name);
-      if (validateBinding(binding, path, programPath, pathToBundle)) {
+      if (
+        validateBinding(binding, path, programPath, pathToBundle) &&
+        binding!.path !== pathToBundle
+      ) {
         outOfScopeBindings.add(binding!);
       }
     },
@@ -116,7 +119,7 @@ async function bundleDefinitionsForPath(
   for (const path of Array.from(outOfScopeBindings).map(
     binding => binding.path
   )) {
-    if (isVariableDeclarator(path.node)) {
+    if (isVariableDeclarator(path.node) || isFunctionDeclaration(path.node)) {
       statements.push(
         ...(await bundleDefinitionsForPath(path, programPath, currentURI))
       );

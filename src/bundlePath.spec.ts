@@ -130,6 +130,29 @@ describe(bundlePath, () => {
     ).rejects.toThrowError();
   });
 
+  test('bundle a function declartion dependencies ', async () => {
+    const code = `
+			const c = 1;
+
+			function a() {
+				return c;
+			}
+
+			const b = a();
+		`;
+
+    const [
+      pathToBundle,
+      programPath,
+    ] = extractPathToBundleAndProgramPathFromCode(code, 'b');
+
+    expect(
+      await bundlePath(pathToBundle!, programPath!, '/a.ts')
+    ).toMatchInlineSnapshot(
+      `"const c = 1;\\\\n\\\\nfunction a() {\\\\n  return c;\\\\n}\\\\n\\\\nconst b = a();"`
+    );
+  });
+
   describe('builtin modules', () => {
     test('importing the console module', async () => {
       const code = `
