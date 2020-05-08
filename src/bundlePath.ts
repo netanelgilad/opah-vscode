@@ -41,6 +41,7 @@ import { resolve as urlResolve } from 'url';
 import traverse from '@babel/traverse';
 import generate from '@babel/generator';
 import jsesc from 'jsesc';
+import { globals } from './globals';
 
 const nodeBuildinModules = ['fs', 'stream', 'http'];
 
@@ -51,8 +52,12 @@ function validateBinding(
   pathToBundle: NodePath
 ) {
   if (!binding) {
-    // TODO: find a way to use buildCodeFrameError
-    throw new ReferenceError(`Could not find ${path.node.name}`);
+    if (!globals.includes(path.node.name)) {
+      // TODO: find a way to use buildCodeFrameError
+      throw new ReferenceError(`Could not find ${path.node.name}`);
+    } else {
+      return false;
+    }
   } else {
     if (binding.scope === programPath.scope) {
       if (isImportNamespaceSpecifier(binding.path.node)) {

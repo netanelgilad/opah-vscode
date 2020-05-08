@@ -8,6 +8,7 @@ import {
 import { bundlePath } from './bundlePath';
 import { parseSync, transformSync } from '@babel/core';
 import { tuple } from '@deaven/tuple';
+import { globals } from './globals';
 
 describe(bundlePath, () => {
   test('should bundle a file scoped binding', async () => {
@@ -146,6 +147,26 @@ describe(bundlePath, () => {
         await bundlePath(pathToBundle!, programPath!, '/a.ts')
       ).toMatchInlineSnapshot(`"const b = console;"`);
     });
+  });
+
+  describe('globals', () => {
+    test.each(globals.map(x => [x]))(
+      'should allow bundling "%s"',
+      async global => {
+        const code = `
+				const b = ${global};
+			`;
+
+        const [
+          pathToBundle,
+          programPath,
+        ] = extractPathToBundleAndProgramPathFromCode(code, 'b');
+
+        expect(
+          await bundlePath(pathToBundle!, programPath!, '/a.ts')
+        ).toMatchInlineSnapshot(`"const b = ${global};"`);
+      }
+    );
   });
 });
 
