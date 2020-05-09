@@ -3,7 +3,7 @@
     "target": "es2017",
     "module": "commonjs",
     "lib": ["esnext"],
-    "sourceMap": true,
+    "inlineSourceMap": true,
     "outDir": "dist",
     "strict": true,
     "noImplicitAny": true,
