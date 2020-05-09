@@ -180,6 +180,33 @@ describe(bundlePath, () => {
     );
   });
 
+  test('should not bundle the same import definition from a builtin module more than once', async () => {
+    const code = `
+		  import { createServer } from "http";
+
+			function d() {
+				return createServer;
+			}
+
+			function a() {
+				return [createServer, d()];
+			}
+
+			const b = a();
+		`;
+
+    const [
+      pathToBundle,
+      programPath,
+    ] = extractPathToBundleAndProgramPathFromCode(code, 'b');
+
+    expect(
+      await bundlePath(pathToBundle!, programPath!, '/a.ts')
+    ).toMatchInlineSnapshot(
+      `"const {\\\\n  createServer\\\\n} = require(\\"http\\");\\\\n\\\\nfunction d() {\\\\n  return createServer;\\\\n}\\\\n\\\\nfunction a() {\\\\n  return [createServer, d()];\\\\n}\\\\n\\\\nconst b = a();"`
+    );
+  });
+
   describe('builtin modules', () => {
     test('importing the console module', async () => {
       const code = `

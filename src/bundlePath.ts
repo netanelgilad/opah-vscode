@@ -237,18 +237,23 @@ async function bundleDefinitionsForPath(
           ))
         );
       } else if (nodeBuildinModules.includes(dependencyPath)) {
-        statements.push(
-          variableDeclaration('const', [
-            variableDeclarator(
-              objectPattern([
-                objectProperty(path.node.local, path.node.local, false, true),
-              ]),
-              callExpression(identifier('require'), [
-                stringLiteral(dependencyPath),
-              ])
-            ),
-          ])
-        );
+        if (
+          !bundledDefinitions.includes(`${dependencyPath}#${path.node.local}`)
+        ) {
+          statements.push(
+            variableDeclaration('const', [
+              variableDeclarator(
+                objectPattern([
+                  objectProperty(path.node.local, path.node.local, false, true),
+                ]),
+                callExpression(identifier('require'), [
+                  stringLiteral(dependencyPath),
+                ])
+              ),
+            ])
+          );
+          bundledDefinitions.push(`${dependencyPath}#${path.node.local}`);
+        }
       }
     } else if (isStatement(path.node)) {
       statements.push(path.node);
