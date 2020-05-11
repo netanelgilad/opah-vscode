@@ -9,7 +9,7 @@
 depno is distributed as a docker image, so to run it just use the following alias:
 
 ```
-alias depno="docker run --rm -v $PWD:/workdir -w /workdir netanelgilad/depno"
+alias depno='docker run --rm -v $PWD:/workdir -w /workdir netanelgilad/depno'
 ```
 
 <hr />
