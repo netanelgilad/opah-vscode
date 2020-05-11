@@ -232,6 +232,25 @@ describe(bundlePath, () => {
         `"\\"use strict\\";\\\\n\\\\nconst b = console;"`
       );
     });
+
+    test('should bundle two imports from the same builtin module', async () => {
+      const code = `
+				import { createServer, request } from "http";
+
+				const b = [createServer, request];
+			`;
+
+      const [
+        pathToBundle,
+        programPath,
+      ] = extractPathToBundleAndProgramPathFromCode(code, 'b');
+
+      expect(
+        await bundlePath(pathToBundle!, true, programPath!, '/a.ts')
+      ).toMatchInlineSnapshot(
+        `"\\"use strict\\";\\\\n\\\\nvar _http = require(\\"http\\");\\\\n\\\\nconst b = [_http.createServer, _http.request];"`
+      );
+    });
   });
 
   describe('globals', () => {

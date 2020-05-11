@@ -233,7 +233,9 @@ async function bundleDefinitionsForPath(
         );
       } else if (nodeBuildinModules.includes(dependencyPath)) {
         if (
-          !bundledDefinitions.includes(`${dependencyPath}#${path.node.local}`)
+          !bundledDefinitions.includes(
+            `${dependencyPath}#${path.node.local.name}`
+          )
         ) {
           statements.push(
             types.importDeclaration(
@@ -241,7 +243,7 @@ async function bundleDefinitionsForPath(
               stringLiteral(dependencyPath)
             )
           );
-          bundledDefinitions.push(`${dependencyPath}#${path.node.local}`);
+          bundledDefinitions.push(`${dependencyPath}#${path.node.local.name}`);
         }
       }
     } else if (isStatement(path.node)) {
