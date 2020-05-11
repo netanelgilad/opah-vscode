@@ -347,6 +347,10 @@ describe('runFile', () => {
 
         const childProcess = await runFile(tmpFilePath);
 
+        expect(childProcess.stderr).toBeDefined();
+        let stderr = await collectStreamChunks(childProcess.stderr!);
+        expect(stderr).toEqual('');
+
         expect(childProcess.stdout).toBeDefined();
         let stdout = await collectStreamChunks(childProcess.stdout!);
         expect(stdout).toEqual('true\ntrue\ntrue\n');

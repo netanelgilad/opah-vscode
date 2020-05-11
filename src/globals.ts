@@ -5,4 +5,6 @@ export const globals = [
   'Promise',
   'eval',
   'JSON',
+  'console',
+  'require',
 ];

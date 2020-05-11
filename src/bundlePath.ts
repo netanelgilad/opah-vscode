@@ -7,7 +7,6 @@ import {
   isStatement,
   Expression,
   Program,
-  isImportNamespaceSpecifier,
   ImportDeclaration,
   isVariableDeclarator,
   variableDeclaration,
@@ -23,9 +22,6 @@ import {
   FunctionDeclaration,
   variableDeclarator,
   identifier,
-  objectPattern,
-  objectProperty,
-  callExpression,
   stringLiteral,
   CallExpression,
   templateLiteral,
@@ -55,19 +51,12 @@ function validateBinding(
   if (!binding) {
     if (!globals.includes(path.node.name)) {
       // TODO: find a way to use buildCodeFrameError
-      throw new ReferenceError(`Could not find ${path.node.name}`);
+      throw new ReferenceError(`Could not find ${JSON.stringify(path.node)}`);
     } else {
       return false;
     }
   } else {
     if (binding.scope === programPath.scope) {
-      if (isImportNamespaceSpecifier(binding.path.node)) {
-        if (
-          (binding.path.parent as ImportDeclaration).source.value === 'console'
-        ) {
-          return false;
-        }
-      }
       return true;
     } else {
       if (!isChildScope(binding.scope, pathToBundle.scope)) {
@@ -100,6 +89,7 @@ export function getDefinitionNameFromNode(node: Node) {
 
 async function bundleDefinitionsForPath(
   pathToBundle: NodePath,
+  isDefinition: boolean,
   programPath: NodePath<Program>,
   currentURI: string,
   wantedName?: string,
@@ -117,6 +107,7 @@ async function bundleDefinitionsForPath(
     ) {
       return bundleDefinitionsForPath(
         binding!.path,
+        true,
         programPath,
         currentURI,
         undefined,
@@ -125,17 +116,19 @@ async function bundleDefinitionsForPath(
     }
   }
 
-  if (
-    bundledDefinitions.includes(
-      `${currentURI}#${getDefinitionNameFromNode(pathToBundle.node)}`
-    )
-  ) {
-    return [];
-  }
+  if (isDefinition) {
+    if (
+      bundledDefinitions.includes(
+        `${currentURI}#${getDefinitionNameFromNode(pathToBundle.node)}`
+      )
+    ) {
+      return [];
+    }
 
-  bundledDefinitions.push(
-    `${currentURI}#${getDefinitionNameFromNode(pathToBundle.node)}`
-  );
+    bundledDefinitions.push(
+      `${currentURI}#${getDefinitionNameFromNode(pathToBundle.node)}`
+    );
+  }
 
   const outOfScopeBindings = new Set<Binding>();
   pathToBundle.traverse({
@@ -160,6 +153,7 @@ async function bundleDefinitionsForPath(
       statements.push(
         ...(await bundleDefinitionsForPath(
           path,
+          true,
           programPath,
           currentURI,
           undefined,
@@ -230,6 +224,7 @@ async function bundleDefinitionsForPath(
         statements.push(
           ...(await bundleDefinitionsForPath(
             dependencyNodePath!,
+            true,
             dependencyProgramPath!,
             dependencyURI,
             path.node.local.name,
@@ -241,16 +236,10 @@ async function bundleDefinitionsForPath(
           !bundledDefinitions.includes(`${dependencyPath}#${path.node.local}`)
         ) {
           statements.push(
-            variableDeclaration('const', [
-              variableDeclarator(
-                objectPattern([
-                  objectProperty(path.node.local, path.node.local, false, true),
-                ]),
-                callExpression(identifier('require'), [
-                  stringLiteral(dependencyPath),
-                ])
-              ),
-            ])
+            types.importDeclaration(
+              [types.importSpecifier(path.node.local, path.node.local)],
+              stringLiteral(dependencyPath)
+            )
           );
           bundledDefinitions.push(`${dependencyPath}#${path.node.local}`);
         }
@@ -307,11 +296,13 @@ async function bundleDefinitionsForPath(
 
 async function bundleIntoASingleProgram(
   pathToBundle: NodePath,
+  isDefinition: boolean,
   programPath: NodePath<Program>,
   uri: string
 ) {
   const definitions = await bundleDefinitionsForPath(
     pathToBundle,
+    isDefinition,
     programPath,
     uri
   );
@@ -329,79 +320,101 @@ async function bundleIntoASingleProgram(
       )
     : expressionStatement(pathToBundle.node as Expression);
 
-  return program(definitions.concat([pathValueStatement]));
+  return program(definitions.concat([pathValueStatement]), undefined, 'module');
 }
 
 export async function bundlePath(
   pathToBundle: NodePath,
+  isDefinition: boolean,
   programPath: NodePath<Program>,
   currentURI: string
 ) {
   const programBeforeMacros = await bundleIntoASingleProgram(
     pathToBundle,
+    isDefinition,
     programPath,
     currentURI
   );
 
-  const { code } = (await transformFromAstAsync(
+  const traversePromises: Promise<any>[] = [];
+
+  const { ast } = (await transformFromAstAsync(
     programBeforeMacros!,
     undefined,
     {
       filename: currentURI,
-      presets: [
-        require('@babel/preset-typescript'),
-        [
-          require('@babel/preset-env'),
-          {
-            targets: ['current node'],
-          },
-        ],
-      ],
+      ast: true,
+      code: false,
       plugins: [
         () => ({
           visitor: {
             ReferencedIdentifier(path: NodePath<Identifier>, state: any) {
-              if (path.node.name === 'bundleAST') {
-                const callExpression = path.parentPath as NodePath<
-                  CallExpression
-                >;
-                const toBundle = callExpression.get('arguments.0') as NodePath;
-                const bundledProgram = bundleSameFile(
-                  toBundle,
-                  state.file.path
-                );
-                const code = generate(bundledProgram, {
-                  compact: true,
-                }).code;
-                path.parentPath.replaceWith(
-                  templateLiteral([templateElement({ raw: code })], [])
+              if (path.node.name === 'bundleToDefaultExport') {
+                traversePromises.push(
+                  (async () => {
+                    const callExpression = path.parentPath as NodePath<
+                      CallExpression
+                    >;
+                    const toBundle = callExpression.get(
+                      'arguments.0'
+                    ) as NodePath<CallExpression['arguments'][number]>;
+                    const definitions = await bundleDefinitionsForPath(
+                      toBundle,
+                      false,
+                      state.file.path,
+                      currentURI
+                    );
+
+                    const bundledProgram = program(
+                      definitions.concat([
+                        types.exportDefaultDeclaration(toBundle.node as any),
+                      ])
+                    );
+
+                    const code = generate(bundledProgram, {
+                      compact: true,
+                    }).code;
+                    path.parentPath.replaceWith(
+                      templateLiteral([templateElement({ raw: code })], [])
+                    );
+                  })()
                 );
               } else if (path.node.name === 'createMacro') {
-                const macroVariableDeclaratorReferencePath =
-                  path.parentPath.parentPath;
-                const macroName = ((macroVariableDeclaratorReferencePath.node as VariableDeclarator)
-                  .id as Identifier).name;
-                const macroFunctionArgumentPath = path.parentPath.get(
-                  'arguments.0'
-                ) as NodePath<Expression>;
+                traversePromises.push(
+                  (async () => {
+                    const macroVariableDeclaratorReferencePath =
+                      path.parentPath.parentPath;
+                    const macroName = ((macroVariableDeclaratorReferencePath.node as VariableDeclarator)
+                      .id as Identifier).name;
+                    const macroFunctionArgumentPath = path.parentPath.get(
+                      'arguments.0'
+                    ) as NodePath<Expression>;
 
-                const programForMacroArgument = bundleSameFile(
-                  macroFunctionArgumentPath,
-                  state.file.path
+                    const programForMacroArgument = await bundleIntoASingleProgram(
+                      macroFunctionArgumentPath,
+                      false,
+                      state.file.path,
+                      currentURI
+                    );
+
+                    const code = generate(programForMacroArgument, {
+                      compact: true,
+                    }).code;
+
+                    const macroFunction = eval(code);
+                    const macroDefinitionBinding = path.scope.getBinding(
+                      macroName
+                    )!;
+                    for (const macroReference of macroDefinitionBinding.referencePaths) {
+                      macroFunction({
+                        reference: macroReference,
+                        types,
+                        state,
+                      });
+                      macroVariableDeclaratorReferencePath.remove();
+                    }
+                  })()
                 );
-
-                const code = generate(programForMacroArgument, {
-                  compact: true,
-                }).code;
-
-                const macroFunction = eval(code);
-                const macroDefinitionBinding = path.scope.getBinding(
-                  macroName
-                )!;
-                for (const macroReference of macroDefinitionBinding.referencePaths) {
-                  macroFunction({ reference: macroReference, types, state });
-                  macroVariableDeclaratorReferencePath.remove();
-                }
               }
             },
           },
@@ -410,69 +423,13 @@ export async function bundlePath(
     }
   ))!;
 
+  await Promise.all(traversePromises);
+
+  const { code } = (await transformFromAstAsync(ast!, undefined, {
+    code: true,
+    filename: currentURI,
+    plugins: [require('@babel/plugin-transform-modules-commonjs')],
+  }))!;
+
   return jsesc(code!, { quotes: 'backtick' });
-}
-
-function bundleSameFile(
-  pathToBundle: NodePath,
-  programPath: NodePath<Program>
-) {
-  const outOfScopeBindings = new Set<Binding>();
-  if (isIdentifier(pathToBundle.node)) {
-    const binding = programPath.scope.getBinding(pathToBundle.node.name);
-    outOfScopeBindings.add(binding!);
-  } else {
-    // when the path to bundle is a declartion in itself, it should be included
-    // in the bindings
-    if (isVariableDeclarator(pathToBundle.node)) {
-      const binding = pathToBundle.scope.getBinding(
-        ((pathToBundle.node as VariableDeclarator).id as Identifier).name
-      );
-      outOfScopeBindings.add(binding!);
-    } else if (isFunctionDeclaration(pathToBundle.node)) {
-      const binding = pathToBundle.scope.getBinding(
-        (pathToBundle.node as FunctionDeclaration).id?.name
-      );
-      outOfScopeBindings.add(binding!);
-    }
-
-    pathToBundle.traverse({
-      // @ts-ignore
-      ReferencedIdentifier(path: NodePath<Identifier>) {
-        const binding = path.scope.getBinding(path.node.name);
-        if (validateBinding(binding, path, programPath, pathToBundle)) {
-          outOfScopeBindings.add(binding!);
-        }
-      },
-    });
-  }
-
-  const statements: Statement[] = [];
-
-  for (const path of Array.from(outOfScopeBindings).map(
-    binding => binding.path
-  )) {
-    if (isVariableDeclarator(path.node)) {
-      statements.push(variableDeclaration('const', [path.node]));
-    } else if (isStatement(path.node)) {
-      statements.push(path.node);
-    } else {
-      throw new Error('asdasdas');
-    }
-  }
-
-  const pathValueStatement = isStatement(pathToBundle.node)
-    ? isExportDefaultDeclaration(pathToBundle.node)
-      ? isFunctionDeclaration(pathToBundle.node) ||
-        isClassDeclaration(pathToBundle.node)
-        ? pathToBundle.node
-        : expressionStatement(pathToBundle.node.declaration as Expression)
-      : pathToBundle.node
-    : isVariableDeclarator(pathToBundle.node)
-    ? expressionStatement(
-        (pathToBundle.node as VariableDeclarator).id as Identifier
-      )
-    : expressionStatement(pathToBundle.node as Expression);
-
-  return program(statements.concat([pathValueStatement]));
 }

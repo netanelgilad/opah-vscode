@@ -73,6 +73,7 @@ export async function runFile(
 
   const functionToRunCode = await bundlePath(
     dependencyNodePath!,
+    true,
     dependencyProgramPath!,
     uri
   );

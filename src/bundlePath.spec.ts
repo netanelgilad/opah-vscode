@@ -26,8 +26,10 @@ describe(bundlePath, () => {
     ] = extractPathToBundleAndProgramPathFromCode(code, 'c');
 
     expect(
-      await bundlePath(pathToBundle!, programPath!, '/a.ts')
-    ).toMatchInlineSnapshot(`"function a() {}\\\\n\\\\nconst c = a;"`);
+      await bundlePath(pathToBundle!, true, programPath!, '/a.ts')
+    ).toMatchInlineSnapshot(
+      `"\\"use strict\\";\\\\n\\\\nfunction a() {}\\\\n\\\\nconst c = a;"`
+    );
   });
 
   test('should bundle variable declarations', async () => {
@@ -42,8 +44,10 @@ describe(bundlePath, () => {
     ] = extractPathToBundleAndProgramPathFromCode(code, 'c');
 
     expect(
-      await bundlePath(pathToBundle!, programPath!, '/a.ts')
-    ).toMatchInlineSnapshot(`"const b = 1;\\\\nconst c = b;"`);
+      await bundlePath(pathToBundle!, true, programPath!, '/a.ts')
+    ).toMatchInlineSnapshot(
+      `"\\"use strict\\";\\\\n\\\\nconst b = 1;\\\\nconst c = b;"`
+    );
   });
 
   test('should bundle transitive variable declarations', async () => {
@@ -59,8 +63,10 @@ describe(bundlePath, () => {
     ] = extractPathToBundleAndProgramPathFromCode(code, 'c');
 
     expect(
-      await bundlePath(pathToBundle!, programPath!, '/a.ts')
-    ).toMatchInlineSnapshot(`"const a = 1;\\\\nconst b = a;\\\\nconst c = b;"`);
+      await bundlePath(pathToBundle!, true, programPath!, '/a.ts')
+    ).toMatchInlineSnapshot(
+      `"\\"use strict\\";\\\\n\\\\nconst a = 1;\\\\nconst b = a;\\\\nconst c = b;"`
+    );
   });
 
   test('should bundle identifier', async () => {
@@ -87,8 +93,8 @@ describe(bundlePath, () => {
     });
 
     expect(
-      await bundlePath(pathToBundle!, programPath!, '/a.ts')
-    ).toMatchInlineSnapshot(`"const b = 1;\\\\nb;"`);
+      await bundlePath(pathToBundle!, true, programPath!, '/a.ts')
+    ).toMatchInlineSnapshot(`"\\"use strict\\";\\\\n\\\\nconst b = 1;\\\\nb;"`);
   });
 
   test('should throw an error on undeclared reference', async () => {
@@ -103,7 +109,7 @@ describe(bundlePath, () => {
     ] = extractPathToBundleAndProgramPathFromCode(code, 'c');
 
     await expect(
-      bundlePath(pathToBundle!, programPath!, '/a.ts')
+      bundlePath(pathToBundle!, true, programPath!, '/a.ts')
     ).rejects.toThrowError();
   });
 
@@ -126,7 +132,7 @@ describe(bundlePath, () => {
     ] = extractPathToBundleAndProgramPathFromCode(code, 'h');
 
     await expect(
-      bundlePath(pathToBundle!, programPath!, '/a.ts')
+      bundlePath(pathToBundle!, true, programPath!, '/a.ts')
     ).rejects.toThrowError();
   });
 
@@ -147,9 +153,9 @@ describe(bundlePath, () => {
     ] = extractPathToBundleAndProgramPathFromCode(code, 'b');
 
     expect(
-      await bundlePath(pathToBundle!, programPath!, '/a.ts')
+      await bundlePath(pathToBundle!, true, programPath!, '/a.ts')
     ).toMatchInlineSnapshot(
-      `"const c = 1;\\\\n\\\\nfunction a() {\\\\n  return c;\\\\n}\\\\n\\\\nconst b = a();"`
+      `"\\"use strict\\";\\\\n\\\\nconst c = 1;\\\\n\\\\nfunction a() {\\\\n  return c;\\\\n}\\\\n\\\\nconst b = a();"`
     );
   });
 
@@ -174,9 +180,9 @@ describe(bundlePath, () => {
     ] = extractPathToBundleAndProgramPathFromCode(code, 'b');
 
     expect(
-      await bundlePath(pathToBundle!, programPath!, '/a.ts')
+      await bundlePath(pathToBundle!, true, programPath!, '/a.ts')
     ).toMatchInlineSnapshot(
-      `"const c = 1;\\\\n\\\\nfunction d() {\\\\n  return c;\\\\n}\\\\n\\\\nfunction a() {\\\\n  return c + d();\\\\n}\\\\n\\\\nconst b = a();"`
+      `"\\"use strict\\";\\\\n\\\\nconst c = 1;\\\\n\\\\nfunction d() {\\\\n  return c;\\\\n}\\\\n\\\\nfunction a() {\\\\n  return c + d();\\\\n}\\\\n\\\\nconst b = a();"`
     );
   });
 
@@ -201,9 +207,9 @@ describe(bundlePath, () => {
     ] = extractPathToBundleAndProgramPathFromCode(code, 'b');
 
     expect(
-      await bundlePath(pathToBundle!, programPath!, '/a.ts')
+      await bundlePath(pathToBundle!, true, programPath!, '/a.ts')
     ).toMatchInlineSnapshot(
-      `"const {\\\\n  createServer\\\\n} = require(\\"http\\");\\\\n\\\\nfunction d() {\\\\n  return createServer;\\\\n}\\\\n\\\\nfunction a() {\\\\n  return [createServer, d()];\\\\n}\\\\n\\\\nconst b = a();"`
+      `"\\"use strict\\";\\\\n\\\\nvar _http = require(\\"http\\");\\\\n\\\\nfunction d() {\\\\n  return _http.createServer;\\\\n}\\\\n\\\\nfunction a() {\\\\n  return [_http.createServer, d()];\\\\n}\\\\n\\\\nconst b = a();"`
     );
   });
 
@@ -221,8 +227,10 @@ describe(bundlePath, () => {
       ] = extractPathToBundleAndProgramPathFromCode(code, 'b');
 
       expect(
-        await bundlePath(pathToBundle!, programPath!, '/a.ts')
-      ).toMatchInlineSnapshot(`"const b = console;"`);
+        await bundlePath(pathToBundle!, true, programPath!, '/a.ts')
+      ).toMatchInlineSnapshot(
+        `"\\"use strict\\";\\\\n\\\\nconst b = console;"`
+      );
     });
   });
 
@@ -231,8 +239,8 @@ describe(bundlePath, () => {
       'should allow bundling "%s"',
       async global => {
         const code = `
-				const b = ${global};
-			`;
+			const b = ${global};
+		`;
 
         const [
           pathToBundle,
@@ -240,8 +248,8 @@ describe(bundlePath, () => {
         ] = extractPathToBundleAndProgramPathFromCode(code, 'b');
 
         expect(
-          await bundlePath(pathToBundle!, programPath!, '/a.ts')
-        ).toMatchInlineSnapshot(`"const b = ${global};"`);
+          await bundlePath(pathToBundle!, true, programPath!, '/a.ts')
+        ).toEqual(`"use strict\";\\n\\nconst b = ${global};`);
       }
     );
   });
