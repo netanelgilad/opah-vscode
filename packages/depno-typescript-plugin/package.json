@@ -1,0 +1,18 @@
+{
+	"name": "depno-typescript-plugin",
+	"version": "0.0.64",
+	"main": "index.js",
+	"author": "Netanel Gilad",
+	"license": "MIT",
+	"scripts": {
+		"prepublishOnly": "tsc ./index.ts"
+	},
+	"devDependencies": {
+		"@types/node": "^13.13.4",
+		"@types/recursive-readdir": "^2.2.0",
+		"typescript": "^3.8.3"
+	},
+	"dependencies": {
+		"merge-deep": "^3.0.2"
+	}
+}
