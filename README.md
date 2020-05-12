@@ -16,6 +16,22 @@ alias depno='docker run --rm -v $PWD:/workdir -w /workdir netanelgilad/depno'
 
 ## Features
 
+### Running functions, not files
+
+At the base of `depno` there is a magnificent and simple concept: the function. And so, the runtime runs a function, not a file (the function just happens to be written in a file). This is intended to drive developers to expose programmatic apis for everything, and avoid creating CLIs with complex parsing logics which you then need to generate complex strings, when all you want is to call a function.
+
+And the interface between the human and the code is also through a function, and so when you run the `depno` cli, you provide the path to the container of your function (http or local file) and optionally the name fo the function to run. When no function name is provided, the default export is run.
+
+### Staticly Analyzable Module Scope
+
+Instead of having the module scope a part of the "runtime", with `depno` that scope is fully static. That means you can only
+declare and/or export definitions at the module scope and no other statement is allowed. The totally analyzable module scope
+provides the runtime a lot of visibility into the structure of the codebase and unlocks some superpowers:
+
+- Functions can be serialized. The whole closure of functions in the module scope is analyzable and can be bundled into the definitions that are needed to create the function.
+- There is a full dependency tree of all those definitions, that could be used for understanding the impact of a change in the codebase. This gives tooling the best insights into performing the minimal needed work on changes.
+- More to come...
+
 ### Minimal Configuration
 
 Working with typescript code should be an easy and boilerplate-free experience. That means no configuration is needed to get started and there is minimal configuration to support different use cases, by avoiding providing multiple configurations to do the same thing.
