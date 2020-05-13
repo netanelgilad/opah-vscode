@@ -7,4 +7,5 @@ export const globals = [
   'JSON',
   'console',
   'require',
+  'Error',
 ];
