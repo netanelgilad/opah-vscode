@@ -8,4 +8,5 @@ export const globals = [
   'console',
   'require',
   'Error',
+  'Object',
 ];
