@@ -9,4 +9,8 @@ export const globals = [
   'require',
   'Error',
   'Object',
+  'Array',
+  'encodeURIComponent',
+  'isFinite',
+  'setTimeout',
 ];
