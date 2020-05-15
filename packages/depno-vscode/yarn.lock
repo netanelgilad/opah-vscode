@@ -396,10 +396,10 @@ define-properties@^1.1.2, define-properties@^1.1.3:
   dependencies:
     object-keys "^1.0.12"
 
-depno-typescript-plugin@^0.0.64:
-  version "0.0.64"
-  resolved "https://registry.yarnpkg.com/depno-typescript-plugin/-/depno-typescript-plugin-0.0.64.tgz#01f4e747689b72bf5ad7bda8adf056c0f0c02d19"
-  integrity sha512-wu2z6eSZoGrB+JjO+frbhrU9USS0d2qvsmsASbLNbRRKo0t2aG6xaS0UOgsGaox/IAVjI3sfsUSPRYaQ0uMyKg==
+depno-typescript-plugin@^0.0.85:
+  version "0.0.85"
+  resolved "https://registry.yarnpkg.com/depno-typescript-plugin/-/depno-typescript-plugin-0.0.85.tgz#cbf150e872c80cdbc9b95531add4f50e4fbf4908"
+  integrity sha512-rp5t5PMdiiz8tzT0JXz2oKZ7e/DaY3rwKMHGGUl9cgKsPrr1nNfWHYJJqNNEQK6/dfl63RS4Lf/YLhzGgKHf7g==
   dependencies:
     merge-deep "^3.0.2"
 
