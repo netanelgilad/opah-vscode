@@ -18,7 +18,6 @@ function init(modules: {
     stripComments: true,
     resolveJsonModule: true,
     target: ts.ScriptTarget.ESNext,
-    typeRoots: [],
     lib: ["lib.esnext.d.ts"],
   };
 
@@ -31,6 +30,8 @@ function init(modules: {
     noEmit: OPTIONS.noEmit,
     noEmitHelpers: OPTIONS.noEmitHelpers,
     target: ts.ScriptTarget.ESNext,
+    typeRoots: [],
+    types: [resolve(__dirname, "builtin-modules")],
     lib: ["lib.esnext.d.ts"],
   };
 
@@ -192,6 +193,15 @@ function init(modules: {
 }
 
 export = init;
+
+function wrapLog(target: Function, log: (message: string) => void) {
+  return (...args: any[]) => {
+    log(`---> ${target.name} : ${args}`);
+    const result = target(...args);
+    log(`<--- ${target.name}: ${result}`);
+    return result;
+  };
+}
 
 function getModuleWithQueryString(moduleName: string): string | undefined {
   let name = moduleName;

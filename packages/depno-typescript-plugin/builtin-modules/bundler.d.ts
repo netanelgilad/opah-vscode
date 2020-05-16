@@ -1,1 +1,3 @@
-export function bundleToDefaultExport(target: any): string;
+declare module "bundler" {
+  export function bundleToDefaultExport(target: any): string;
+}

@@ -1,1 +1,3 @@
-export const console: Console;
+declare module "console" {
+  export const console: Console;
+}
