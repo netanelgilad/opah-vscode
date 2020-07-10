@@ -13,4 +13,5 @@ export const globals = [
   'encodeURIComponent',
   'isFinite',
   'setTimeout',
+  'Map',
 ];
