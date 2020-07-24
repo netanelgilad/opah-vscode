@@ -40,7 +40,7 @@ import generate from '@babel/generator';
 import jsesc from 'jsesc';
 import { globals } from './globals';
 
-const nodeBuildinModules = ['fs', 'stream', 'http'];
+const nodeBuildinModules = ['fs', 'stream', 'http', 'https'];
 
 function validateBinding(
   binding: Binding | undefined,

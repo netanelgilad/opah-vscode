@@ -329,6 +329,22 @@ describe('runFile', () => {
       }
     );
 
+    statefulTest('should allow importing from https moudle', async function*() {
+      const tmpFilePath = yield* fixtureFile(`
+				import {request} from "https";
+				import {console} from "console";
+        export default () => {
+          console.log(typeof request !== "undefined")
+        }
+      `);
+
+      const childProcess = await runFile(tmpFilePath);
+
+      expect(childProcess.stdout).toBeDefined();
+      let stdout = await collectStreamChunks(childProcess.stdout!);
+      expect(stdout).toEqual('true\n');
+    });
+
     statefulTest(
       'should allow importing from node buildin modules',
       async function*() {
@@ -336,7 +352,7 @@ describe('runFile', () => {
 					import {readFile} from "fs";
 					import { Readable } from "stream";
 					import { request } from "http";
-					import {console} from "console";
+					import { console } from "console";
 
 					export default () => {
 						console.log(typeof readFile !== "undefined")
