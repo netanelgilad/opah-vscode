@@ -28,7 +28,7 @@ describe(bundlePath, () => {
     expect(
       await bundlePath(pathToBundle!, true, programPath!, '/a.ts')
     ).toMatchInlineSnapshot(
-      `"\\"use strict\\";\\\\n\\\\nfunction a() {}\\\\n\\\\nconst c = a;"`
+      `"\\"use strict\\";\\\\n\\\\nfunction _a_ts_a() {}\\\\n\\\\nconst c = _a_ts_a;"`
     );
   });
 
@@ -46,7 +46,7 @@ describe(bundlePath, () => {
     expect(
       await bundlePath(pathToBundle!, true, programPath!, '/a.ts')
     ).toMatchInlineSnapshot(
-      `"\\"use strict\\";\\\\n\\\\nconst b = 1;\\\\nconst c = b;"`
+      `"\\"use strict\\";\\\\n\\\\nconst _a_ts_b = 1;\\\\nconst c = _a_ts_b;"`
     );
   });
 
@@ -65,7 +65,7 @@ describe(bundlePath, () => {
     expect(
       await bundlePath(pathToBundle!, true, programPath!, '/a.ts')
     ).toMatchInlineSnapshot(
-      `"\\"use strict\\";\\\\n\\\\nconst a = 1;\\\\nconst b = a;\\\\nconst c = b;"`
+      `"\\"use strict\\";\\\\n\\\\nconst _a_ts_a = 1;\\\\nconst _a_ts_b = _a_ts_a;\\\\nconst c = _a_ts_b;"`
     );
   });
 
@@ -94,7 +94,9 @@ describe(bundlePath, () => {
 
     expect(
       await bundlePath(pathToBundle!, true, programPath!, '/a.ts')
-    ).toMatchInlineSnapshot(`"\\"use strict\\";\\\\n\\\\nconst b = 1;\\\\nb;"`);
+    ).toMatchInlineSnapshot(
+      `"\\"use strict\\";\\\\n\\\\nconst _a_ts_b = 1;\\\\nb;"`
+    );
   });
 
   test('should throw an error on undeclared reference', async () => {
@@ -155,7 +157,7 @@ describe(bundlePath, () => {
     expect(
       await bundlePath(pathToBundle!, true, programPath!, '/a.ts')
     ).toMatchInlineSnapshot(
-      `"\\"use strict\\";\\\\n\\\\nconst c = 1;\\\\n\\\\nfunction a() {\\\\n  return c;\\\\n}\\\\n\\\\nconst b = a();"`
+      `"\\"use strict\\";\\\\n\\\\nconst _a_ts_c = 1;\\\\n\\\\nfunction _a_ts_a() {\\\\n  return _a_ts_c;\\\\n}\\\\n\\\\nconst b = _a_ts_a();"`
     );
   });
 
@@ -182,7 +184,7 @@ describe(bundlePath, () => {
     expect(
       await bundlePath(pathToBundle!, true, programPath!, '/a.ts')
     ).toMatchInlineSnapshot(
-      `"\\"use strict\\";\\\\n\\\\nconst c = 1;\\\\n\\\\nfunction d() {\\\\n  return c;\\\\n}\\\\n\\\\nfunction a() {\\\\n  return c + d();\\\\n}\\\\n\\\\nconst b = a();"`
+      `"\\"use strict\\";\\\\n\\\\nconst _a_ts_c = 1;\\\\n\\\\nfunction _a_ts_d() {\\\\n  return _a_ts_c;\\\\n}\\\\n\\\\nfunction _a_ts_a() {\\\\n  return _a_ts_c + _a_ts_d();\\\\n}\\\\n\\\\nconst b = _a_ts_a();"`
     );
   });
 
@@ -209,7 +211,7 @@ describe(bundlePath, () => {
     expect(
       await bundlePath(pathToBundle!, true, programPath!, '/a.ts')
     ).toMatchInlineSnapshot(
-      `"\\"use strict\\";\\\\n\\\\nvar _http = require(\\"http\\");\\\\n\\\\nfunction d() {\\\\n  return _http.createServer;\\\\n}\\\\n\\\\nfunction a() {\\\\n  return [_http.createServer, d()];\\\\n}\\\\n\\\\nconst b = a();"`
+      `"\\"use strict\\";\\\\n\\\\nvar _http = require(\\"http\\");\\\\n\\\\nfunction _a_ts_d() {\\\\n  return _http.createServer;\\\\n}\\\\n\\\\nfunction _a_ts_a() {\\\\n  return [_http.createServer, _a_ts_d()];\\\\n}\\\\n\\\\nconst b = _a_ts_a();"`
     );
   });
 
@@ -229,7 +231,7 @@ describe(bundlePath, () => {
       expect(
         await bundlePath(pathToBundle!, true, programPath!, '/a.ts')
       ).toMatchInlineSnapshot(
-        `"\\"use strict\\";\\\\n\\\\nconst b = console;"`
+        `"\\"use strict\\";\\\\n\\\\nconst console_console = console;\\\\nconst b = console_console;"`
       );
     });
 

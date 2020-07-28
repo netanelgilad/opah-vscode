@@ -39,8 +39,9 @@ import traverse from '@babel/traverse';
 import generate from '@babel/generator';
 import jsesc from 'jsesc';
 import { globals } from './globals';
+import { fullyQualifiedIdentifier } from './fullyQualifiedIdentifier';
 
-const nodeBuildinModules = ['fs', 'stream', 'http', 'https'];
+const nodeBuildinModules = ['fs', 'stream', 'http', 'https', 'buffer'];
 
 function validateBinding(
   binding: Binding | undefined,
@@ -51,7 +52,7 @@ function validateBinding(
   if (!binding) {
     if (!globals.includes(path.node.name)) {
       // TODO: find a way to use buildCodeFrameError
-      throw new ReferenceError(`Could not find ${JSON.stringify(path.node)}`);
+      throw new ReferenceError(`Could not find ${path.node.name}`);
     } else {
       return false;
     }
@@ -87,62 +88,121 @@ export function getDefinitionNameFromNode(node: Node) {
   );
 }
 
+function withDefaults<TRequired, TDefaults>(
+  defaults: TDefaults,
+  opts: TRequired
+): TRequired & TDefaults {
+  return {
+    ...defaults,
+    ...(Object.fromEntries(
+      Object.entries(opts).filter(([, val]) => typeof val !== 'undefined')
+    ) as TRequired),
+  };
+}
+
 async function bundleDefinitionsForPath(
-  pathToBundle: NodePath,
-  isDefinition: boolean,
-  programPath: NodePath<Program>,
-  currentURI: string,
-  wantedName?: string,
-  bundledDefinitions: string[] = []
+  given: {
+    pathToBundle: NodePath;
+    isDefinition: boolean;
+    programPath: NodePath<Program>;
+    currentURI: string;
+    wantedName?: string;
+    bundledDefinitions?: string[];
+    useCanonicalNames?: boolean;
+  },
+  opts = withDefaults(
+    { bundledDefinitions: [] as string[], useCanonicalNames: true },
+    given
+  )
 ): Promise<Statement[]> {
-  if (isIdentifier(pathToBundle.node)) {
-    const binding = programPath.scope.getBinding(pathToBundle.node.name);
+  if (isIdentifier(opts.pathToBundle.node)) {
+    const binding = opts.programPath.scope.getBinding(
+      opts.pathToBundle.node.name
+    );
     if (
       validateBinding(
         binding,
-        pathToBundle as NodePath<Identifier>,
-        programPath,
-        pathToBundle
+        opts.pathToBundle as NodePath<Identifier>,
+        opts.programPath,
+        opts.pathToBundle
       )
     ) {
-      return bundleDefinitionsForPath(
-        binding!.path,
-        true,
-        programPath,
-        currentURI,
-        undefined,
-        bundledDefinitions
-      );
+      return bundleDefinitionsForPath({
+        pathToBundle: binding!.path,
+        isDefinition: true,
+        programPath: opts.programPath,
+        currentURI: opts.currentURI,
+        bundledDefinitions: opts.bundledDefinitions,
+        useCanonicalNames: opts.useCanonicalNames,
+      });
     }
   }
 
-  if (isDefinition) {
+  if (opts.isDefinition) {
     if (
-      bundledDefinitions.includes(
-        `${currentURI}#${getDefinitionNameFromNode(pathToBundle.node)}`
+      opts.bundledDefinitions.includes(
+        fullyQualifiedIdentifier(
+          opts.currentURI,
+          getDefinitionNameFromNode(opts.pathToBundle.node)
+        )
       )
     ) {
       return [];
     }
 
-    bundledDefinitions.push(
-      `${currentURI}#${getDefinitionNameFromNode(pathToBundle.node)}`
+    opts.bundledDefinitions.push(
+      fullyQualifiedIdentifier(
+        opts.currentURI,
+        getDefinitionNameFromNode(opts.pathToBundle.node)
+      )
     );
   }
 
   const outOfScopeBindings = new Set<Binding>();
-  pathToBundle.traverse({
+  const replacements: (() => unknown)[] = [];
+  opts.pathToBundle.traverse({
     // @ts-ignore
     ReferencedIdentifier(path: NodePath<Identifier>) {
       const binding = path.scope.getBinding(path.node.name);
-      if (
-        validateBinding(binding, path, programPath, pathToBundle) &&
-        binding!.path !== pathToBundle
-      ) {
-        outOfScopeBindings.add(binding!);
+      if (validateBinding(binding, path, opts.programPath, opts.pathToBundle)) {
+        if (binding!.path !== opts.pathToBundle) {
+          outOfScopeBindings.add(binding!);
+        }
+
+        if (opts.useCanonicalNames) {
+          if (isImportSpecifier(binding!.path.node)) {
+            replacements.push(() => {
+              path.replaceWith(
+                identifier(
+                  fullyQualifiedIdentifier(
+                    resolveURIFromDependency(
+                      (binding!.path.parentPath as NodePath<ImportDeclaration>)
+                        .node.source.value,
+                      opts.currentURI
+                    ),
+                    path.node.name
+                  )
+                )
+              );
+            });
+          } else if (
+            isVariableDeclarator(binding!.path.node) ||
+            isFunctionDeclaration(binding!.path.node)
+          ) {
+            replacements.push(() => {
+              const node = identifier(
+                fullyQualifiedIdentifier(opts.currentURI, path.node.name)
+              );
+              node.loc = path.node.loc;
+              path.replaceWith(node);
+            });
+          }
+        }
       }
     },
   });
+
+  replacements.forEach(replacement => replacement());
 
   const statements: Statement[] = [];
 
@@ -151,14 +211,14 @@ async function bundleDefinitionsForPath(
   )) {
     if (isVariableDeclarator(path.node) || isFunctionDeclaration(path.node)) {
       statements.push(
-        ...(await bundleDefinitionsForPath(
-          path,
-          true,
-          programPath,
-          currentURI,
-          undefined,
-          bundledDefinitions
-        ))
+        ...(await bundleDefinitionsForPath({
+          pathToBundle: path,
+          isDefinition: true,
+          programPath: opts.programPath,
+          currentURI: opts.currentURI,
+          bundledDefinitions: opts.bundledDefinitions,
+          useCanonicalNames: opts.useCanonicalNames,
+        }))
       );
     } else if (
       isImportSpecifier(path.node) ||
@@ -169,9 +229,9 @@ async function bundleDefinitionsForPath(
       const dependencyURI = dependencyPath.startsWith('http://')
         ? dependencyPath
         : dependencyPath.startsWith('.')
-        ? currentURI.startsWith('/')
-          ? resolve(dirname(currentURI), dependencyPath)
-          : urlResolve(currentURI, dependencyPath)
+        ? opts.currentURI.startsWith('/')
+          ? resolve(dirname(opts.currentURI), dependencyPath)
+          : urlResolve(opts.currentURI, dependencyPath)
         : undefined;
       if (dependencyURI) {
         const code = await getContentsFromURI(dependencyURI);
@@ -222,29 +282,51 @@ async function bundleDefinitionsForPath(
         });
 
         statements.push(
-          ...(await bundleDefinitionsForPath(
-            dependencyNodePath!,
-            true,
-            dependencyProgramPath!,
-            dependencyURI,
-            path.node.local.name,
-            bundledDefinitions
-          ))
+          ...(await bundleDefinitionsForPath({
+            pathToBundle: dependencyNodePath!,
+            isDefinition: true,
+            programPath: dependencyProgramPath!,
+            currentURI: dependencyURI,
+            wantedName: path.node.local.name,
+            bundledDefinitions: opts.bundledDefinitions,
+            useCanonicalNames: opts.useCanonicalNames,
+          }))
         );
       } else if (nodeBuildinModules.includes(dependencyPath)) {
         if (
-          !bundledDefinitions.includes(
+          !opts.bundledDefinitions.includes(
             `${dependencyPath}#${path.node.local.name}`
           )
         ) {
           statements.push(
             types.importDeclaration(
-              [types.importSpecifier(path.node.local, path.node.local)],
+              [
+                types.importSpecifier(
+                  identifier(
+                    fullyQualifiedIdentifier(
+                      dependencyPath,
+                      path.node.local.name
+                    )
+                  ),
+                  path.node.local
+                ),
+              ],
               stringLiteral(dependencyPath)
             )
           );
-          bundledDefinitions.push(`${dependencyPath}#${path.node.local.name}`);
+          opts.bundledDefinitions.push(
+            `${dependencyPath}#${path.node.local.name}`
+          );
         }
+      } else if (dependencyPath === 'console') {
+        statements.push(
+          types.variableDeclaration('const', [
+            variableDeclarator(
+              identifier(fullyQualifiedIdentifier(dependencyPath, 'console')),
+              identifier('console')
+            ),
+          ])
+        );
       }
     } else if (isStatement(path.node)) {
       statements.push(path.node);
@@ -255,38 +337,67 @@ async function bundleDefinitionsForPath(
 
   // when the path to bundle is a declartion in itself, it should be included
   // in the bindings
-  if (isVariableDeclarator(pathToBundle.node)) {
-    const binding = pathToBundle.scope.getBinding(
-      ((pathToBundle.node as VariableDeclarator | FunctionDeclaration)
+  if (isVariableDeclarator(opts.pathToBundle.node)) {
+    const binding = opts.pathToBundle.scope.getBinding(
+      ((opts.pathToBundle.node as VariableDeclarator | FunctionDeclaration)
         .id as Identifier).name
     );
     if (
       validateBinding(
         binding,
-        pathToBundle as NodePath<Identifier>,
-        programPath,
-        pathToBundle
+        opts.pathToBundle as NodePath<Identifier>,
+        opts.programPath,
+        opts.pathToBundle
       )
     ) {
-      statements.push(variableDeclaration('const', [pathToBundle.node]));
-    }
-  } else if (isFunctionDeclaration(pathToBundle.node)) {
-    statements.push(pathToBundle.node);
-  } else if (isExportDefaultDeclaration(pathToBundle.node)) {
-    if (wantedName) {
       statements.push(
         variableDeclaration('const', [
           variableDeclarator(
-            identifier(wantedName),
-            isFunctionDeclaration(pathToBundle.node.declaration)
+            identifier(
+              opts.useCanonicalNames
+                ? fullyQualifiedIdentifier(
+                    opts.currentURI,
+                    (opts.pathToBundle.node.id as Identifier).name
+                  )
+                : (opts.pathToBundle.node.id as Identifier).name
+            ),
+            opts.pathToBundle.node.init
+          ),
+        ])
+      );
+    }
+  } else if (isFunctionDeclaration(opts.pathToBundle.node)) {
+    statements.push(
+      types.functionDeclaration(
+        identifier(
+          opts.useCanonicalNames
+            ? fullyQualifiedIdentifier(
+                opts.currentURI,
+                opts.pathToBundle.node.id?.name
+              )
+            : opts.pathToBundle.node.id?.name
+        ),
+        opts.pathToBundle.node.params,
+        opts.pathToBundle.node.body,
+        opts.pathToBundle.node.generator,
+        opts.pathToBundle.node.async
+      )
+    );
+  } else if (isExportDefaultDeclaration(opts.pathToBundle.node)) {
+    if (opts.wantedName) {
+      statements.push(
+        variableDeclaration('const', [
+          variableDeclarator(
+            identifier(opts.wantedName),
+            isFunctionDeclaration(opts.pathToBundle.node.declaration)
               ? functionExpression(
-                  pathToBundle.node.declaration.id,
-                  pathToBundle.node.declaration.params,
-                  pathToBundle.node.declaration.body,
-                  pathToBundle.node.declaration.generator,
-                  pathToBundle.node.declaration.async
+                  opts.pathToBundle.node.declaration.id,
+                  opts.pathToBundle.node.declaration.params,
+                  opts.pathToBundle.node.declaration.body,
+                  opts.pathToBundle.node.declaration.generator,
+                  opts.pathToBundle.node.declaration.async
                 )
-              : (pathToBundle.node.declaration as Expression)
+              : (opts.pathToBundle.node.declaration as Expression)
           ),
         ])
       );
@@ -300,14 +411,16 @@ async function bundleIntoASingleProgram(
   pathToBundle: NodePath,
   isDefinition: boolean,
   programPath: NodePath<Program>,
-  uri: string
+  uri: string,
+  useCanonicalNames?: boolean
 ) {
-  const definitions = await bundleDefinitionsForPath(
+  const definitions = await bundleDefinitionsForPath({
     pathToBundle,
     isDefinition,
     programPath,
-    uri
-  );
+    currentURI: uri,
+    useCanonicalNames,
+  });
 
   const pathValueStatement = isStatement(pathToBundle.node)
     ? isExportDefaultDeclaration(pathToBundle.node)
@@ -318,7 +431,12 @@ async function bundleIntoASingleProgram(
       : pathToBundle.node
     : isVariableDeclarator(pathToBundle.node)
     ? expressionStatement(
-        (pathToBundle.node as VariableDeclarator).id as Identifier
+        identifier(
+          fullyQualifiedIdentifier(
+            uri,
+            (pathToBundle.node.id as Identifier).name
+          )
+        )
       )
     : expressionStatement(pathToBundle.node as Expression);
 
@@ -351,7 +469,10 @@ export async function bundlePath(
         () => ({
           visitor: {
             ReferencedIdentifier(path: NodePath<Identifier>, state: any) {
-              if (path.node.name === 'bundleToDefaultExport') {
+              if (
+                path.node.name ===
+                fullyQualifiedIdentifier('bundler', 'bundleToDefaultExport')
+              ) {
                 traversePromises.push(
                   (async () => {
                     const callExpression = path.parentPath as NodePath<
@@ -360,12 +481,13 @@ export async function bundlePath(
                     const toBundle = callExpression.get(
                       'arguments.0'
                     ) as NodePath<CallExpression['arguments'][number]>;
-                    const definitions = await bundleDefinitionsForPath(
-                      toBundle,
-                      false,
-                      state.file.path,
-                      currentURI
-                    );
+                    const definitions = await bundleDefinitionsForPath({
+                      pathToBundle: toBundle,
+                      isDefinition: false,
+                      programPath: state.file.path,
+                      currentURI,
+                      useCanonicalNames: false,
+                    });
 
                     const bundledProgram = program(
                       definitions.concat([
@@ -381,7 +503,10 @@ export async function bundlePath(
                     );
                   })()
                 );
-              } else if (path.node.name === 'createMacro') {
+              } else if (
+                path.node.name ===
+                fullyQualifiedIdentifier('@depno/macros', 'createMacro')
+              ) {
                 traversePromises.push(
                   (async () => {
                     const macroVariableDeclaratorReferencePath =
@@ -396,7 +521,8 @@ export async function bundlePath(
                       macroFunctionArgumentPath,
                       false,
                       state.file.path,
-                      currentURI
+                      currentURI,
+                      false
                     );
 
                     const code = generate(programForMacroArgument, {
@@ -434,4 +560,17 @@ export async function bundlePath(
   }))!;
 
   return jsesc(code!, { quotes: 'backtick' });
+}
+
+function resolveURIFromDependency(dependencyPath: string, currentURI: string) {
+  return dependencyPath.startsWith('http://')
+    ? dependencyPath
+    : dependencyPath.startsWith('.')
+    ? currentURI.startsWith('/')
+      ? resolve(dirname(currentURI), dependencyPath)
+      : urlResolve(currentURI, dependencyPath)
+    : dependencyPath;
+  // return dependencyPath.startsWith('.')
+  //   ? resolve(dirname(currentURI), dependencyPath)
+  //   : dependencyPath;
 }

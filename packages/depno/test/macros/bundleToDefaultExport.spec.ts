@@ -4,6 +4,7 @@ import { fixtureFile } from '../fixtureFile';
 import { runFile } from '../../src';
 import { collectStreamChunks } from '../collectStreamChunks';
 import { join } from 'path';
+import { fullyQualifiedIdentifier } from '../../src/fullyQualifiedIdentifier';
 
 describe('runFile', () => {
   describe('with bundleToDefaultExport', () => {
@@ -38,7 +39,19 @@ describe('runFile', () => {
         expect(childProcess.stdout).toBeDefined();
         let stdout = await collectStreamChunks(childProcess.stdout!);
         expect(stdout).toMatchInlineSnapshot(`
-          "function fibonacci(num){if(num<=1)return 1;return fibonacci(num-1)+fibonacci(num-2);}export default fibonacci;
+          "function ${fullyQualifiedIdentifier(
+            tmpFilePath,
+            'fibonacci'
+          )}(num){if(num<=1)return 1;return ${fullyQualifiedIdentifier(
+          tmpFilePath,
+          'fibonacci'
+        )}(num-1)+${fullyQualifiedIdentifier(
+          tmpFilePath,
+          'fibonacci'
+        )}(num-2);}export default ${fullyQualifiedIdentifier(
+          tmpFilePath,
+          'fibonacci'
+        )};
           "
         `);
       }
@@ -71,7 +84,10 @@ describe('runFile', () => {
       expect(childProcess.stdout).toBeDefined();
       let stdout = await collectStreamChunks(childProcess.stdout!);
       expect(stdout).toMatchInlineSnapshot(`
-        "const a=1;const b=a;const c=b;export default c;
+        "const ${fullyQualifiedIdentifier(
+          tmpFilePath,
+          'a'
+        )}=1;const ${fullyQualifiedIdentifier(tmpFilePath, 'b')}=${fullyQualifiedIdentifier(tmpFilePath, 'a')};const ${fullyQualifiedIdentifier(tmpFilePath, 'c')}=${fullyQualifiedIdentifier(tmpFilePath, 'b')};export default ${fullyQualifiedIdentifier(tmpFilePath, 'c')};
         "
       `);
     });
@@ -92,7 +108,7 @@ describe('runFile', () => {
         join(tmpDirectory, 'dependant.ts')
       );
 
-      yield* fixtureFile(
+      const dependencyFilePath = yield* fixtureFile(
         `
 				export function fibonacci(num: number): number {
 					if (num <= 1) return 1;
@@ -111,7 +127,10 @@ describe('runFile', () => {
       expect(childProcess.stdout).toBeDefined();
       let stdout = await collectStreamChunks(childProcess.stdout!);
       expect(stdout).toMatchInlineSnapshot(`
-        "function fibonacci(num){if(num<=1)return 1;return fibonacci(num-1)+fibonacci(num-2);}export default fibonacci;
+        "function ${fullyQualifiedIdentifier(
+          dependencyFilePath,
+          'fibonacci'
+        )}(num){if(num<=1)return 1;return ${fullyQualifiedIdentifier(dependencyFilePath, 'fibonacci')}(num-1)+${fullyQualifiedIdentifier(dependencyFilePath, 'fibonacci')}(num-2);}export default ${fullyQualifiedIdentifier(dependencyFilePath, 'fibonacci')};
         "
       `);
     });

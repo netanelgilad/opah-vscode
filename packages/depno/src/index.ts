@@ -1,5 +1,5 @@
 import { ChildProcess, fork } from 'child_process';
-import { NodePath, transformAsync } from '@babel/core';
+import { NodePath } from '@babel/core';
 import { file } from 'tempy';
 import { writeFileSync } from 'fs';
 import { File } from '@babel/types';
@@ -8,6 +8,7 @@ import { resolve } from 'path';
 import { bundlePath } from './bundlePath';
 import { getContentsFromURI } from './getContentsFromURI';
 import traverse from '@babel/traverse';
+import { getASTFromCode } from './getASTFromCode';
 
 export async function runFile(
   path: string,
@@ -25,70 +26,68 @@ export async function runFile(
 
   const code = await getContentsFromURI(uri);
 
-  let dependencyNodePath: NodePath;
-  let dependencyProgramPath: NodePath<types.Program>;
-  const { ast } = (await transformAsync(code, {
-    filename: uri,
-    ast: true,
-    presets: [
-      require('@babel/preset-typescript'),
-      [
-        require('@babel/preset-env'),
-        {
-          targets: {
-            node: 'current',
-          },
-          modules: false,
-        },
-      ],
-    ],
-  }))!;
+  const ast = await getASTFromCode(code, uri);
 
-  if (exportedFunctionName === 'default') {
+  const { program, node } = getDeclarationByName(
+    (ast as unknown) as File,
+    exportedFunctionName,
+    uri
+  );
+
+  const functionToRunCode = await bundlePath(node, true, program, uri);
+
+  return executeFunctionCode(functionToRunCode, args, opts.cwd);
+}
+
+function getDeclarationByName(ast: File, name: string, uri: string) {
+  let program: NodePath<types.Program>;
+  let node: NodePath;
+
+  if (name === 'default') {
     traverse((ast as unknown) as File, {
       Program(programPath) {
-        dependencyProgramPath = programPath;
+        program = programPath;
       },
       ExportDefaultDeclaration(exportDefaultPath) {
-        dependencyNodePath = exportDefaultPath;
+        node = exportDefaultPath;
         exportDefaultPath.stop();
       },
     });
   } else {
     traverse((ast as unknown) as File, {
       Program(programPath) {
-        dependencyProgramPath = programPath;
-        const dependencyBinding = programPath.scope.getBinding(
-          exportedFunctionName
-        );
+        program = programPath;
+        const dependencyBinding = programPath.scope.getBinding(name);
         if (!dependencyBinding) {
           throw new ReferenceError(
-            `Failed to find binding for ${exportedFunctionName} at ${uri}`
+            `Failed to find binding for ${name} at ${uri}`
           );
         }
-        dependencyNodePath = dependencyBinding.path;
+        node = dependencyBinding.path;
       },
     });
   }
 
-  const functionToRunCode = await bundlePath(
-    dependencyNodePath!,
-    true,
-    dependencyProgramPath!,
-    uri
-  );
+  return {
+    program: program!,
+    node: node!,
+  };
+}
 
+function executeFunctionCode(code: string, args: any[], cwd?: string) {
   const tmpFile = file({ extension: 'js' });
 
   writeFileSync(
     tmpFile,
-    `eval(\`${functionToRunCode}\`)(${args
-      .map(x => JSON.stringify(x))
-      .join(',')})`
+    `eval(\`${code}\`)(${args.map(x => JSON.stringify(x)).join(',')})`
   );
 
+  if (process.env.DEPNO_DEBUG) {
+    console.log(tmpFile);
+  }
+
   return fork(tmpFile, [], {
-    cwd: opts.cwd,
+    cwd,
     stdio: 'pipe',
   });
 }

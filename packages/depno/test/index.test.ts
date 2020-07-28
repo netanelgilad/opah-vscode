@@ -3,7 +3,7 @@ import { runFile } from '../src/index';
 import { Chance } from 'chance';
 import { join } from 'path';
 import { statefulTest } from './statefulTest';
-import { fixtureFile } from './fixtureFile';
+import { fixtureFile, fixtureFolder } from './fixtureFile';
 import { staticFileServer } from './staticFileServer';
 import { collectStreamChunks } from './collectStreamChunks';
 
@@ -204,7 +204,7 @@ describe('runFile', () => {
     );
 
     statefulTest(
-      'should run a file that imports deafult from a dependency',
+      'should run a file that imports default from a dependency',
       async function*() {
         const tmpDirectory = directory();
         const expectedStdout = chance.string();
@@ -307,6 +307,48 @@ describe('runFile', () => {
         }
       );
     });
+  });
+
+  describe('declarations', () => {
+    statefulTest(
+      'should run a file with dependencies that have the same named declaration',
+      async function*() {
+        const tmpFolder = yield* fixtureFolder({
+          ['foo.ts']: `
+					const a = 1;
+					export const b = a;
+					`,
+          ['baz.ts']: `
+					const a = 2;
+					export const c = a;
+					`,
+          ['bar.ts']: `
+					import {console} from "console";
+					import {c} from "./baz.ts";
+					import {b} from "./foo.ts";
+
+					export default () => {
+						console.log(b);
+						console.log(c);
+					}
+					`,
+        });
+
+        const childProcess = await runFile(join(tmpFolder, 'bar.ts'));
+
+        expect(childProcess.stderr).toBeDefined();
+        let stderr = await collectStreamChunks(childProcess.stderr!);
+        expect(stderr).toMatchInlineSnapshot(`""`);
+
+        expect(childProcess.stdout).toBeDefined();
+        let stdout = await collectStreamChunks(childProcess.stdout!);
+        expect(stdout).toMatchInlineSnapshot(`
+          "1
+          2
+          "
+        `);
+      }
+    );
   });
 
   describe('builtin modules', () => {

@@ -10,7 +10,7 @@ describe('runFile', () => {
 
     yield* fixtureFile(
       `
-				import { createMacro } from 'macros';
+				import { createMacro } from '@depno/macros';
 				import { console } from "console";
 
         const LocationBasedSymbol = createMacro(({ reference, types, state }) => {
