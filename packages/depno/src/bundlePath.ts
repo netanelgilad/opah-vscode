@@ -41,7 +41,14 @@ import jsesc from 'jsesc';
 import { globals } from './globals';
 import { fullyQualifiedIdentifier } from './fullyQualifiedIdentifier';
 
-const nodeBuildinModules = ['fs', 'stream', 'http', 'https', 'buffer'];
+const nodeBuildinModules = [
+  'fs',
+  'stream',
+  'http',
+  'https',
+  'buffer',
+  'crypto',
+];
 
 function validateBinding(
   binding: Binding | undefined,
