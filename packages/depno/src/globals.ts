@@ -14,4 +14,5 @@ export const globals = [
   'isFinite',
   'setTimeout',
   'Map',
+  'escape',
 ];
