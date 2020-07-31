@@ -389,4 +389,40 @@ declare module "stream" {
     cork(): void;
     uncork(): void;
   }
+
+  type TransformCallback = (error?: Error | null, data?: any) => void;
+
+  interface TransformOptions extends DuplexOptions {
+    read?(this: Transform, size: number): void;
+    write?(
+      this: Transform,
+      chunk: any,
+      encoding: string,
+      callback: (error?: Error | null) => void
+    ): void;
+    writev?(
+      this: Transform,
+      chunks: Array<{ chunk: any; encoding: string }>,
+      callback: (error?: Error | null) => void
+    ): void;
+    final?(this: Transform, callback: (error?: Error | null) => void): void;
+    destroy?(
+      this: Transform,
+      error: Error | null,
+      callback: (error: Error | null) => void
+    ): void;
+    transform?(
+      this: Transform,
+      chunk: any,
+      encoding: string,
+      callback: TransformCallback
+    ): void;
+    flush?(this: Transform, callback: TransformCallback): void;
+  }
+
+  export class Transform extends Duplex {
+    constructor(opts?: TransformOptions);
+    _transform(chunk: any, encoding: string, callback: TransformCallback): void;
+    _flush(callback: TransformCallback): void;
+  }
 }
