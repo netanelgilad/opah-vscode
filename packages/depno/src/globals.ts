@@ -15,4 +15,5 @@ export const globals = [
   'setTimeout',
   'Map',
   'escape',
+  'Int32Array',
 ];
