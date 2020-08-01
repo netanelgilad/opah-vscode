@@ -1,5 +1,6 @@
 declare module "fs" {
   import { Buffer, BufferEncoding } from "buffer";
+  import { Writable, Readable } from "stream";
 
   // @ts-ignore
   export const constants: {
@@ -261,4 +262,100 @@ declare module "fs" {
     path: PathLike,
     options: { encoding?: string | null; withFileTypes: true }
   ): Dirent[];
+
+  class WriteStream extends Writable {
+    close(): void;
+    bytesWritten: number;
+    path: string | Buffer;
+    pending: boolean;
+
+    /**
+     * events.EventEmitter
+     *   1. open
+     *   2. close
+     *   3. ready
+     */
+    addListener(event: "close", listener: () => void): this;
+    addListener(event: "drain", listener: () => void): this;
+    addListener(event: "error", listener: (err: Error) => void): this;
+    addListener(event: "finish", listener: () => void): this;
+    addListener(event: "open", listener: (fd: number) => void): this;
+    addListener(event: "pipe", listener: (src: Readable) => void): this;
+    addListener(event: "ready", listener: () => void): this;
+    addListener(event: "unpipe", listener: (src: Readable) => void): this;
+    addListener(
+      event: string | symbol,
+      listener: (...args: any[]) => void
+    ): this;
+
+    on(event: "close", listener: () => void): this;
+    on(event: "drain", listener: () => void): this;
+    on(event: "error", listener: (err: Error) => void): this;
+    on(event: "finish", listener: () => void): this;
+    on(event: "open", listener: (fd: number) => void): this;
+    on(event: "pipe", listener: (src: Readable) => void): this;
+    on(event: "ready", listener: () => void): this;
+    on(event: "unpipe", listener: (src: Readable) => void): this;
+    on(event: string | symbol, listener: (...args: any[]) => void): this;
+
+    once(event: "close", listener: () => void): this;
+    once(event: "drain", listener: () => void): this;
+    once(event: "error", listener: (err: Error) => void): this;
+    once(event: "finish", listener: () => void): this;
+    once(event: "open", listener: (fd: number) => void): this;
+    once(event: "pipe", listener: (src: Readable) => void): this;
+    once(event: "ready", listener: () => void): this;
+    once(event: "unpipe", listener: (src: Readable) => void): this;
+    once(event: string | symbol, listener: (...args: any[]) => void): this;
+
+    prependListener(event: "close", listener: () => void): this;
+    prependListener(event: "drain", listener: () => void): this;
+    prependListener(event: "error", listener: (err: Error) => void): this;
+    prependListener(event: "finish", listener: () => void): this;
+    prependListener(event: "open", listener: (fd: number) => void): this;
+    prependListener(event: "pipe", listener: (src: Readable) => void): this;
+    prependListener(event: "ready", listener: () => void): this;
+    prependListener(event: "unpipe", listener: (src: Readable) => void): this;
+    prependListener(
+      event: string | symbol,
+      listener: (...args: any[]) => void
+    ): this;
+
+    prependOnceListener(event: "close", listener: () => void): this;
+    prependOnceListener(event: "drain", listener: () => void): this;
+    prependOnceListener(event: "error", listener: (err: Error) => void): this;
+    prependOnceListener(event: "finish", listener: () => void): this;
+    prependOnceListener(event: "open", listener: (fd: number) => void): this;
+    prependOnceListener(event: "pipe", listener: (src: Readable) => void): this;
+    prependOnceListener(event: "ready", listener: () => void): this;
+    prependOnceListener(
+      event: "unpipe",
+      listener: (src: Readable) => void
+    ): this;
+    prependOnceListener(
+      event: string | symbol,
+      listener: (...args: any[]) => void
+    ): this;
+  }
+
+  /**
+   * Returns a new `WriteStream` object.
+   * @param path A path to a file. If a URL is provided, it must use the `file:` protocol.
+   * URL support is _experimental_.
+   */
+  export function createWriteStream(
+    path: PathLike,
+    options?:
+      | string
+      | {
+          flags?: string;
+          encoding?: string;
+          fd?: number;
+          mode?: number;
+          autoClose?: boolean;
+          emitClose?: boolean;
+          start?: number;
+          highWaterMark?: number;
+        }
+  ): WriteStream;
 }
