@@ -37,7 +37,7 @@ function init(modules: {
 
   function create(info: ts.server.PluginCreateInfo) {
     function log(message: any) {
-      info.project.projectService.logger.info(`depno: ${message}`);
+      // info.project.projectService.logger.info(`depno: ${message}`);
     }
 
     const projectDirectory = info.project.getCurrentDirectory();
