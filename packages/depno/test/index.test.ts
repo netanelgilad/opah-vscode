@@ -309,6 +309,38 @@ describe('runFile', () => {
     });
   });
 
+  statefulTest('with a class extending another', async function*() {
+    const expectedStdout = chance.string();
+
+    const tmpFilePath = yield* fixtureFile(`
+				import {console} from "console";
+
+				class A {
+
+				}
+
+				class B extends A {
+					get() {
+						return '${expectedStdout}'
+					}
+				}
+
+        export default () => {
+          console.log(new B().get());
+        }
+      `);
+
+    const childProcess = await runFile(tmpFilePath);
+
+    expect(childProcess.stderr).toBeDefined();
+    let stderr = await collectStreamChunks(childProcess.stderr!);
+    expect(stderr).toMatchInlineSnapshot(`""`);
+
+    expect(childProcess.stdout).toBeDefined();
+    let stdout = await collectStreamChunks(childProcess.stdout!);
+    expect(stdout).toEqual(expectedStdout + '\n');
+  });
+
   describe('declarations', () => {
     statefulTest(
       'should run a file with dependencies that have the same named declaration',

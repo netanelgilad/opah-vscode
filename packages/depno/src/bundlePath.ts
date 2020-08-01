@@ -90,6 +90,8 @@ export function getDefinitionNameFromNode(node: Node) {
     return (node.declarations[0].id as Identifier).name;
   } else if (isIdentifier(node)) {
     return node.name;
+  } else if (isClassDeclaration(node)) {
+    return node.id.name;
   }
   throw new Error(
     `Don't know how to getDefinitionNameFromNode for node of type ${node.type}`
@@ -195,7 +197,8 @@ async function bundleDefinitionsForPath(
             });
           } else if (
             isVariableDeclarator(binding!.path.node) ||
-            isFunctionDeclaration(binding!.path.node)
+            isFunctionDeclaration(binding!.path.node) ||
+            isClassDeclaration(binding!.path.node)
           ) {
             replacements.push(() => {
               const node = identifier(
@@ -217,7 +220,11 @@ async function bundleDefinitionsForPath(
   for (const path of Array.from(outOfScopeBindings).map(
     binding => binding.path
   )) {
-    if (isVariableDeclarator(path.node) || isFunctionDeclaration(path.node)) {
+    if (
+      isVariableDeclarator(path.node) ||
+      isFunctionDeclaration(path.node) ||
+      isClassDeclaration(path.node)
+    ) {
       statements.push(
         ...(await bundleDefinitionsForPath({
           pathToBundle: path,
@@ -410,6 +417,22 @@ async function bundleDefinitionsForPath(
         ])
       );
     }
+  } else if (isClassDeclaration(opts.pathToBundle.node)) {
+    statements.push(
+      types.classDeclaration(
+        identifier(
+          opts.useCanonicalNames
+            ? fullyQualifiedIdentifier(
+                opts.currentURI,
+                opts.pathToBundle.node.id?.name
+              )
+            : opts.pathToBundle.node.id?.name
+        ),
+        opts.pathToBundle.node.superClass,
+        opts.pathToBundle.node.body,
+        opts.pathToBundle.node.decorators
+      )
+    );
   }
 
   return statements;
