@@ -381,6 +381,42 @@ describe('runFile', () => {
         `);
       }
     );
+
+    statefulTest(
+      'should run a file with dependencies that both import from console',
+      async function*() {
+        const tmpFolder = yield* fixtureFolder({
+          ['foo.ts']: `
+					import { console } from "console";
+					export function foo() {
+						console.log("foo");
+					}
+					`,
+          ['baz.ts']: `
+					import { console } from "console";
+					import { foo } from "./foo.ts";
+					export default () => {
+						foo();
+						console.log('baz');
+					}
+					`,
+        });
+
+        const childProcess = await runFile(join(tmpFolder, 'baz.ts'));
+
+        expect(childProcess.stderr).toBeDefined();
+        let stderr = await collectStreamChunks(childProcess.stderr!);
+        expect(stderr).toMatchInlineSnapshot(`""`);
+
+        expect(childProcess.stdout).toBeDefined();
+        let stdout = await collectStreamChunks(childProcess.stdout!);
+        expect(stdout).toMatchInlineSnapshot(`
+          "foo
+          baz
+          "
+        `);
+      }
+    );
   });
 
   describe('builtin modules', () => {

@@ -334,14 +334,23 @@ async function bundleDefinitionsForPath(
           );
         }
       } else if (dependencyPath === 'console') {
-        statements.push(
-          types.variableDeclaration('const', [
-            variableDeclarator(
-              identifier(fullyQualifiedIdentifier(dependencyPath, 'console')),
-              identifier('console')
-            ),
-          ])
-        );
+        if (
+          !opts.bundledDefinitions.includes(
+            `${dependencyPath}#${path.node.local.name}`
+          )
+        ) {
+          statements.push(
+            types.variableDeclaration('const', [
+              variableDeclarator(
+                identifier(fullyQualifiedIdentifier(dependencyPath, 'console')),
+                identifier('console')
+              ),
+            ])
+          );
+          opts.bundledDefinitions.push(
+            `${dependencyPath}#${path.node.local.name}`
+          );
+        }
       }
     } else if (isStatement(path.node)) {
       statements.push(path.node);
