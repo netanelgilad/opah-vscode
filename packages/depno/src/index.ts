@@ -89,5 +89,6 @@ function executeFunctionCode(code: string, args: any[], cwd?: string) {
   return fork(tmpFile, [], {
     cwd,
     stdio: 'pipe',
+    execArgv: ['--unhandled-rejections=strict'],
   });
 }

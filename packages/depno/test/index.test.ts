@@ -6,6 +6,7 @@ import { statefulTest } from './statefulTest';
 import { fixtureFile, fixtureFolder } from './fixtureFile';
 import { staticFileServer } from './staticFileServer';
 import { collectStreamChunks } from './collectStreamChunks';
+import stripIndent from 'strip-indent';
 
 const chance = new Chance();
 
@@ -483,4 +484,62 @@ describe('runFile', () => {
       }
     );
   });
+
+  statefulTest(
+    'should throw proper error on unhandled rejections',
+    async function*() {
+      const tmpFilePath = yield* fixtureFile(`
+				import {console} from "console";
+        export default async () => {
+          throw new Error('this is my error')
+        }
+      `);
+
+      const childProcess = await runFile(tmpFilePath);
+
+      expect(childProcess.stdout).toBeDefined();
+      let stdout = await collectStreamChunks(childProcess.stdout!);
+      expect(stdout).toEqual('');
+
+      expect(childProcess.stderr).toBeDefined();
+      let stderr = await collectStreamChunks(childProcess.stderr!);
+      expect(stderr).toEqual(
+        expect.stringMatching(outputMatchRegExp`
+          undefined:4
+						throw new Error('this is my error');
+									^
+
+					Error: this is my error
+							at eval (eval at <anonymous> (${anyString}:1:1), <anonymous>:4:9)
+							at Object.<anonymous> (${anyString}:1:83)
+							at Module._compile (internal/modules/cjs/loader.js:1151:30)
+							at Object.Module._extensions..js (internal/modules/cjs/loader.js:1171:10)
+							at Module.load (internal/modules/cjs/loader.js:1000:32)
+							at Function.Module._load (internal/modules/cjs/loader.js:899:14)
+							at Function.executeUserEntryPoint [as runMain] (internal/modules/run_main.js:71:12)
+							at internal/main/run_main_module.js:17:47
+					`)
+      );
+    }
+  );
 });
+
+const anyString = '.*';
+
+function outputMatchRegExp(strings: TemplateStringsArray, ...vars: any[]) {
+  const regExpAsString = strings.reduce((result, current, index) => {
+    return (
+      result +
+      escapeRegExp(current) +
+      (index === strings.length - 1 ? '' : vars[index])
+    );
+  }, '');
+  return new RegExp(
+    stripIndent(regExpAsString.replace(/\t/g, '  ')).trim(),
+    'img'
+  );
+}
+
+function escapeRegExp(str: string) {
+  return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); // $& means the whole matched string
+}
