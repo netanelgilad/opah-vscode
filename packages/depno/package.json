@@ -6,8 +6,9 @@
   "author": "Netanel Gilad <netanelgilad@gmail.com>",
   "license": "MIT",
   "scripts": {
+    "build:ts": "tsc",
     "build:ncc": "ncc build -s ./src/bin.ts",
-    "build:pkg": "pkg ./dist/index.js --public --output ./dist/depno -t node13-linux-x64 && chmod +x ./dist/depno",
+    "build:pkg": "pkg ./dist/index.js --public --output ./dist/depno -t node14-linux-x64 && chmod +x ./dist/depno",
     "build:docker": "docker build . -t netanelgilad/depno:`git rev-parse HEAD`",
     "publish:docker": "docker push netanelgilad/depno:`git rev-parse HEAD`",
     "tag:docker": "docker tag netanelgilad/depno:`git rev-parse HEAD` netanelgilad/depno:latest && docker push netanelgilad/depno:latest",

@@ -1,2 +1,5 @@
-*
-!./dist
+./*
+!./package.json
+!./yarn.lock
+!./tsconfig.json
+!./src
