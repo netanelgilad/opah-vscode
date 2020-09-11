@@ -18,12 +18,6 @@
   ],
   "main": "./out/extension.js",
   "contributes": {
-    "commands": [
-      {
-        "command": "depno.helloWorld",
-        "title": "Hello World"
-      }
-    ],
     "typescriptServerPlugins": [
       {
         "name": "depno-typescript-plugin"
