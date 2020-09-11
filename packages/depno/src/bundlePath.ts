@@ -49,6 +49,7 @@ const nodeBuildinModules = [
   'buffer',
   'crypto',
   'zlib',
+  'url',
 ];
 
 function validateBinding(
