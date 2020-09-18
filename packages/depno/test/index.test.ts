@@ -7,6 +7,11 @@ import { fixtureFile, fixtureFolder } from './fixtureFile';
 import { staticFileServer } from './staticFileServer';
 import { collectStreamChunks } from './collectStreamChunks';
 import stripIndent from 'strip-indent';
+import { assertThat } from './assertThat';
+import { hasExitedSuccessfulyWith } from './assertions/hasExitedSuccessfulyWith';
+import Expect from 'expect';
+declare const expect: typeof Expect;
+declare const describe;
 
 const chance = new Chance();
 
@@ -26,9 +31,10 @@ describe('runFile', () => {
 
       const childProcess = await runFile(tmpFilePath);
 
-      expect(childProcess.stdout).toBeDefined();
-      let stdout = await collectStreamChunks(childProcess.stdout!);
-      expect(stdout).toEqual(expectedStdout + '\n');
+      await assertThat(
+        childProcess,
+        hasExitedSuccessfulyWith(expectedStdout + '\n')
+      );
     }
   );
 
@@ -48,9 +54,10 @@ describe('runFile', () => {
 
     const childProcess = await runFile(tmpFilePath);
 
-    expect(childProcess.stdout).toBeDefined();
-    let stdout = await collectStreamChunks(childProcess.stdout!);
-    expect(stdout).toEqual(expectedStdout + '\n');
+    await assertThat(
+      childProcess,
+      hasExitedSuccessfulyWith(expectedStdout + '\n')
+    );
   });
 
   statefulTest('should run a relative typecript file', async function*() {
@@ -72,9 +79,10 @@ describe('runFile', () => {
       cwd: tmpDirectory,
     });
 
-    expect(childProcess.stdout).toBeDefined();
-    let stdout = await collectStreamChunks(childProcess.stdout!);
-    expect(stdout).toEqual(expectedStdout + '\n');
+    await assertThat(
+      childProcess,
+      hasExitedSuccessfulyWith(expectedStdout + '\n')
+    );
   });
 
   statefulTest(
@@ -98,9 +106,10 @@ describe('runFile', () => {
         args: [],
       });
 
-      expect(childProcess.stdout).toBeDefined();
-      let stdout = await collectStreamChunks(childProcess.stdout!);
-      expect(stdout).toEqual(expectedStdout + '\n');
+      await assertThat(
+        childProcess,
+        hasExitedSuccessfulyWith(expectedStdout + '\n')
+      );
     }
   );
 
@@ -125,13 +134,10 @@ describe('runFile', () => {
         args: [],
       });
 
-      expect(childProcess.stderr).toBeDefined();
-      let stderr = await collectStreamChunks(childProcess.stderr!);
-      expect(stderr).toEqual('');
-
-      expect(childProcess.stdout).toBeDefined();
-      let stdout = await collectStreamChunks(childProcess.stdout!);
-      expect(stdout).toEqual(expectedStdout + '\n');
+      await assertThat(
+        childProcess,
+        hasExitedSuccessfulyWith(expectedStdout + '\n')
+      );
     }
   );
 
@@ -155,9 +161,10 @@ describe('runFile', () => {
         args: [expectedStdout],
       });
 
-      expect(childProcess.stdout).toBeDefined();
-      let stdout = await collectStreamChunks(childProcess.stdout!);
-      expect(stdout).toEqual(expectedStdout + '\n');
+      await assertThat(
+        childProcess,
+        hasExitedSuccessfulyWith(expectedStdout + '\n')
+      );
     }
   );
 
@@ -191,9 +198,10 @@ describe('runFile', () => {
 
         const childProcess = await runFile(dependantFilePath);
 
-        expect(childProcess.stdout).toBeDefined();
-        let stdout = await collectStreamChunks(childProcess.stdout!);
-        expect(stdout).toEqual(expectedStdout + '\n');
+        await assertThat(
+          childProcess,
+          hasExitedSuccessfulyWith(expectedStdout + '\n')
+        );
       }
     );
 
@@ -229,9 +237,10 @@ describe('runFile', () => {
 
         const childProcess = await runFile(dependantFilePath);
 
-        expect(childProcess.stdout).toBeDefined();
-        let stdout = await collectStreamChunks(childProcess.stdout!);
-        expect(stdout).toEqual(expectedStdout + '\n');
+        await assertThat(
+          childProcess,
+          hasExitedSuccessfulyWith(expectedStdout + '\n')
+        );
       }
     );
 
@@ -264,9 +273,10 @@ describe('runFile', () => {
 
         const childProcess = await runFile(dependantFilePath);
 
-        expect(childProcess.stdout).toBeDefined();
-        let stdout = await collectStreamChunks(childProcess.stdout!);
-        expect(stdout).toEqual(expectedStdout + '\n');
+        await assertThat(
+          childProcess,
+          hasExitedSuccessfulyWith(expectedStdout + '\n')
+        );
       }
     );
 
@@ -299,9 +309,10 @@ describe('runFile', () => {
 
           const childProcess = await runFile(tmpFilePath);
 
-          expect(childProcess.stdout).toBeDefined();
-          let stdout = await collectStreamChunks(childProcess.stdout!);
-          expect(stdout).toEqual(expectedStdout + '\n');
+          await assertThat(
+            childProcess,
+            hasExitedSuccessfulyWith(expectedStdout + '\n')
+          );
         }
       );
 
@@ -330,12 +341,10 @@ describe('runFile', () => {
             `http://localhost:${(httpServerAddress! as any).port}/index.ts`
           );
 
-          let stderr = await collectStreamChunks(childProcess.stderr!);
-          expect(stderr).toEqual('');
-
-          expect(childProcess.stdout).toBeDefined();
-          let stdout = await collectStreamChunks(childProcess.stdout!);
-          expect(stdout).toEqual(expectedStdout + '\n');
+          await assertThat(
+            childProcess,
+            hasExitedSuccessfulyWith(expectedStdout + '\n')
+          );
         }
       );
     });
@@ -364,13 +373,10 @@ describe('runFile', () => {
 
     const childProcess = await runFile(tmpFilePath);
 
-    expect(childProcess.stderr).toBeDefined();
-    let stderr = await collectStreamChunks(childProcess.stderr!);
-    expect(stderr).toMatchInlineSnapshot(`""`);
-
-    expect(childProcess.stdout).toBeDefined();
-    let stdout = await collectStreamChunks(childProcess.stdout!);
-    expect(stdout).toEqual(expectedStdout + '\n');
+    await assertThat(
+      childProcess,
+      hasExitedSuccessfulyWith(expectedStdout + '\n')
+    );
   });
 
   describe('declarations', () => {
@@ -400,17 +406,7 @@ describe('runFile', () => {
 
         const childProcess = await runFile(join(tmpFolder, 'bar.ts'));
 
-        expect(childProcess.stderr).toBeDefined();
-        let stderr = await collectStreamChunks(childProcess.stderr!);
-        expect(stderr).toMatchInlineSnapshot(`""`);
-
-        expect(childProcess.stdout).toBeDefined();
-        let stdout = await collectStreamChunks(childProcess.stdout!);
-        expect(stdout).toMatchInlineSnapshot(`
-          "1
-          2
-          "
-        `);
+        await assertThat(childProcess, hasExitedSuccessfulyWith(`1\n2\n`));
       }
     );
 
@@ -436,17 +432,7 @@ describe('runFile', () => {
 
         const childProcess = await runFile(join(tmpFolder, 'baz.ts'));
 
-        expect(childProcess.stderr).toBeDefined();
-        let stderr = await collectStreamChunks(childProcess.stderr!);
-        expect(stderr).toMatchInlineSnapshot(`""`);
-
-        expect(childProcess.stdout).toBeDefined();
-        let stdout = await collectStreamChunks(childProcess.stdout!);
-        expect(stdout).toMatchInlineSnapshot(`
-          "foo
-          baz
-          "
-        `);
+        await assertThat(childProcess, hasExitedSuccessfulyWith(`foo\nbaz\n`));
       }
     );
   });
@@ -465,9 +451,7 @@ describe('runFile', () => {
 
         const childProcess = await runFile(tmpFilePath);
 
-        expect(childProcess.stdout).toBeDefined();
-        let stdout = await collectStreamChunks(childProcess.stdout!);
-        expect(stdout).toEqual('true\n');
+        await assertThat(childProcess, hasExitedSuccessfulyWith(`true\n`));
       }
     );
 
@@ -482,9 +466,7 @@ describe('runFile', () => {
 
       const childProcess = await runFile(tmpFilePath);
 
-      expect(childProcess.stdout).toBeDefined();
-      let stdout = await collectStreamChunks(childProcess.stdout!);
-      expect(stdout).toEqual('true\n');
+      await assertThat(childProcess, hasExitedSuccessfulyWith(`true\n`));
     });
 
     statefulTest(
@@ -505,13 +487,10 @@ describe('runFile', () => {
 
         const childProcess = await runFile(tmpFilePath);
 
-        expect(childProcess.stderr).toBeDefined();
-        let stderr = await collectStreamChunks(childProcess.stderr!);
-        expect(stderr).toEqual('');
-
-        expect(childProcess.stdout).toBeDefined();
-        let stdout = await collectStreamChunks(childProcess.stdout!);
-        expect(stdout).toEqual('true\ntrue\ntrue\n');
+        await assertThat(
+          childProcess,
+          hasExitedSuccessfulyWith(`true\ntrue\ntrue\n`)
+        );
       }
     );
   });
