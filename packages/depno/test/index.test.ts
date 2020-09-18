@@ -78,7 +78,7 @@ describe('runFile', () => {
   });
 
   statefulTest(
-    'should run the given exported function from a file',
+    'should run the given const exported function from a file',
     async function*() {
       const expectedStdout = chance.string();
       const exportedFunctionName = chance.string({ pool: 'abcdef' });
@@ -97,6 +97,37 @@ describe('runFile', () => {
         exportedFunctionName,
         args: [],
       });
+
+      expect(childProcess.stdout).toBeDefined();
+      let stdout = await collectStreamChunks(childProcess.stdout!);
+      expect(stdout).toEqual(expectedStdout + '\n');
+    }
+  );
+
+  statefulTest(
+    'should run the given exported function from a file',
+    async function*() {
+      const expectedStdout = chance.string();
+      const exportedFunctionName = chance.string({ pool: 'abcdef' });
+
+      const tmpFilePath = yield* fixtureFile(
+        `
+				import {console} from "console";
+      	export function ${exportedFunctionName}() {
+					const text: string = '${expectedStdout}';
+					console.log(text);
+				}
+      `
+      );
+
+      const childProcess = await runFile(tmpFilePath, {
+        exportedFunctionName,
+        args: [],
+      });
+
+      expect(childProcess.stderr).toBeDefined();
+      let stderr = await collectStreamChunks(childProcess.stderr!);
+      expect(stderr).toEqual('');
 
       expect(childProcess.stdout).toBeDefined();
       let stdout = await collectStreamChunks(childProcess.stdout!);

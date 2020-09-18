@@ -469,6 +469,15 @@ async function bundleIntoASingleProgram(
         isClassDeclaration(pathToBundle.node)
         ? pathToBundle.node
         : expressionStatement(pathToBundle.node.declaration as Expression)
+      : isFunctionDeclaration(pathToBundle.node)
+      ? expressionStatement(
+          identifier(
+            fullyQualifiedIdentifier(
+              uri,
+              ((pathToBundle.node as FunctionDeclaration).id as Identifier).name
+            )
+          )
+        )
       : pathToBundle.node
     : isVariableDeclarator(pathToBundle.node)
     ? expressionStatement(
@@ -497,6 +506,25 @@ export async function bundlePath(
     currentURI
   );
 
+  const ast = await processMacros(programBeforeMacros, currentURI);
+
+  return generateNodeJsCompatibleCode(ast, currentURI);
+}
+
+function resolveURIFromDependency(dependencyPath: string, currentURI: string) {
+  return dependencyPath.startsWith('http://')
+    ? dependencyPath
+    : dependencyPath.startsWith('.')
+    ? currentURI.startsWith('/')
+      ? resolve(dirname(currentURI), dependencyPath)
+      : urlResolve(currentURI, dependencyPath)
+    : dependencyPath;
+  // return dependencyPath.startsWith('.')
+  //   ? resolve(dirname(currentURI), dependencyPath)
+  //   : dependencyPath;
+}
+
+async function processMacros(programBeforeMacros: Program, currentURI: string) {
   const traversePromises: Promise<any>[] = [];
 
   const { ast } = (await transformFromAstAsync(
@@ -594,24 +622,15 @@ export async function bundlePath(
 
   await Promise.all(traversePromises);
 
-  const { code } = (await transformFromAstAsync(ast!, undefined, {
+  return ast!;
+}
+
+async function generateNodeJsCompatibleCode(ast: File, currentURI: string) {
+  const { code } = (await transformFromAstAsync(ast, undefined, {
     code: true,
     filename: currentURI,
     plugins: [require('@babel/plugin-transform-modules-commonjs')],
   }))!;
 
   return jsesc(code!, { quotes: 'backtick' });
-}
-
-function resolveURIFromDependency(dependencyPath: string, currentURI: string) {
-  return dependencyPath.startsWith('http://')
-    ? dependencyPath
-    : dependencyPath.startsWith('.')
-    ? currentURI.startsWith('/')
-      ? resolve(dirname(currentURI), dependencyPath)
-      : urlResolve(currentURI, dependencyPath)
-    : dependencyPath;
-  // return dependencyPath.startsWith('.')
-  //   ? resolve(dirname(currentURI), dependencyPath)
-  //   : dependencyPath;
 }
