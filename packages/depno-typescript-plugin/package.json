@@ -1,6 +1,6 @@
 {
 	"name": "depno-typescript-plugin",
-	"version": "0.0.110",
+	"version": "0.0.111",
 	"main": "index.js",
 	"author": "Netanel Gilad",
 	"license": "MIT",
