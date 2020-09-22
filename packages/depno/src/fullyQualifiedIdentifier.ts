@@ -3,7 +3,8 @@ function sanitizeURI(uri: string) {
     .replace(/\//g, '_')
     .replace(/\./g, '_')
     .replace(/@/g, '_')
-    .replace(/:/g, '_');
+    .replace(/:/g, '_')
+    .replace(/-/, '_');
 }
 
 export function fullyQualifiedIdentifier(uri: string, name: string) {
