@@ -50,6 +50,7 @@ const nodeBuildinModules = [
   'crypto',
   'zlib',
   'url',
+  'readline',
 ];
 
 function validateBinding(
