@@ -1,9 +1,21 @@
 import Expect from 'expect';
+import { Assertion, Otherwise } from './assertions/Assertion';
 declare const expect: typeof Expect;
 
-export function assertThat<T, TReturn>(
+export async function assertThat<T>(
   something: T,
-  assertion: (expect: typeof Expect, something: T) => TReturn
-): TReturn {
-  return assertion(expect, something);
+  assertion: Assertion<T>,
+  otherwise?: Otherwise
+) {
+  try {
+    await assertion(expect, something);
+  } catch (err) {
+    if (otherwise) {
+      const moreInfo = await otherwise.value(err);
+      err.message += '\n\nMore Information provided:\n' + moreInfo;
+      throw err;
+    } else {
+      throw err;
+    }
+  }
 }

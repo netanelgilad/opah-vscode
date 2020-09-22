@@ -16,8 +16,10 @@ export async function runFile(
     exportedFunctionName?: string;
     args?: any[];
     cwd?: string;
+    silent?: boolean;
   } = {}
 ): Promise<ChildProcess> {
+  const silent = opts.silent ?? true;
   const args = opts.args ?? [];
   const exportedFunctionName = opts.exportedFunctionName ?? 'default';
   const uri = path.startsWith('.')
@@ -36,7 +38,7 @@ export async function runFile(
 
   const functionToRunCode = await bundlePath(node, true, program, uri);
 
-  return executeFunctionCode(functionToRunCode, args, opts.cwd);
+  return executeFunctionCode(functionToRunCode, args, opts.cwd, silent);
 }
 
 function getDeclarationByName(ast: File, name: string, uri: string) {
@@ -74,13 +76,25 @@ function getDeclarationByName(ast: File, name: string, uri: string) {
   };
 }
 
-function executeFunctionCode(code: string, args: any[], cwd?: string) {
+function executeFunctionCode(
+  code: string,
+  args: any[],
+  cwd?: string,
+  silent?: boolean
+) {
   const tmpFile = file({ extension: 'js' });
 
-  writeFileSync(
-    tmpFile,
-    `eval(\`${code}\`)(${args.map(x => JSON.stringify(x)).join(',')})`
-  );
+  const mappedArgs = args.map(x => {
+    if (x === '__stdin__') {
+      return 'process.stdin';
+    } else if (x === '__stdout__') {
+      return 'process.stdout';
+    } else {
+      return JSON.stringify(x);
+    }
+  });
+
+  writeFileSync(tmpFile, `eval(\`${code}\`)(${mappedArgs.join(',')})`);
 
   if (process.env.DEPNO_DEBUG) {
     console.log(tmpFile);
@@ -88,7 +102,7 @@ function executeFunctionCode(code: string, args: any[], cwd?: string) {
 
   return fork(tmpFile, [], {
     cwd,
-    stdio: 'pipe',
+    silent,
     execArgv: ['--unhandled-rejections=strict'],
   });
 }

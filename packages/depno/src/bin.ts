@@ -5,11 +5,17 @@ import { runFile } from './index';
   const fileToRun = process.argv[2];
   const exportedFunctionName = process.argv[3];
   const parameters = process.argv.slice(4);
-  const childProcess = await runFile(fileToRun, {
+  await runFile(fileToRun, {
     exportedFunctionName,
-    args: parameters.map(x => JSON.parse(x)),
+    args: parameters.map(x => {
+      if (x === '{stdin}') {
+        return '__stdin__';
+      } else if (x === '{stdout}') {
+        return '__stdout__';
+      } else {
+        return JSON.parse(x);
+      }
+    }),
+    silent: false,
   });
-
-  childProcess.stdout!.pipe(process.stdout);
-  childProcess.stderr!.pipe(process.stderr);
 })();
