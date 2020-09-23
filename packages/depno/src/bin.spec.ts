@@ -1,11 +1,10 @@
 import { Chance } from 'chance';
 import { fork } from 'child_process';
-import { otherwise } from '../test/assertions/Assertion';
+import { within } from '../test/assertions/Assertion';
 import { hasExitedSuccessfulyWith as willExitSuccessfulyWith } from '../test/assertions/hasExitedSuccessfulyWith';
 import { willExitSuccessfuly } from '../test/assertions/willExistSuccessfuly';
 import { willPrint } from '../test/assertions/willPrint';
 import { assertThat } from '../test/assertThat';
-import { collectStreamChunks } from '../test/collectStreamChunks';
 import { fixtureFile } from '../test/fixtureFile';
 import { statefulTest } from '../test/statefulTest';
 
@@ -20,9 +19,9 @@ statefulTest(
       `
 			import {console} from "console";
       export const ${exportedFunctionName} = (text) => {
-        console.log(text);
+				console.log(text);
       }
-		`
+			`
     );
 
     const childProcess = fork(
@@ -37,10 +36,12 @@ statefulTest(
         stdio: 'pipe',
       }
     );
+    yield () => childProcess.kill('SIGTERM');
 
     await assertThat(
       childProcess,
-      willExitSuccessfulyWith(expectedStdout + '\n')
+      willExitSuccessfulyWith(expectedStdout + '\n'),
+      within(7000).milliseconds
     );
   }
 );
@@ -86,28 +87,26 @@ statefulTest(
         stdio: 'pipe',
       }
     );
+    yield () => childProcess.kill('SIGTERM');
 
     await assertThat(
       childProcess,
       willPrint(questionText),
-      otherwise(
-        async () =>
-          `The stderr was: ${await collectStreamChunks(childProcess.stderr)}`
-      )
+      within(5000).milliseconds
     );
 
     childProcess.stdin.write(answerText + '\n');
     childProcess.stdin.end();
 
-    await assertThat(childProcess, willPrint(answerText));
+    await assertThat(
+      childProcess,
+      willPrint(answerText),
+      within(5000).milliseconds
+    );
     await assertThat(
       childProcess,
       willExitSuccessfuly,
-      otherwise(
-        async () =>
-          `The stderr was: ${await collectStreamChunks(childProcess.stderr)}`
-      )
+      within(5000).milliseconds
     );
-  },
-  20000
+  }
 );

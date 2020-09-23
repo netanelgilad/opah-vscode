@@ -8,7 +8,7 @@ function createStatefulTestFunction(
   return function statefulTest(
     description: string,
     fn: () => AsyncGenerator<any, unknown, any>,
-    timeout?: number
+    timeout = 60000
   ) {
     const cleanups = [] as (() => unknown)[];
     testFn(
