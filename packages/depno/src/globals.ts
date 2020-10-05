@@ -16,4 +16,5 @@ export const globals = [
   'Map',
   'escape',
   'Int32Array',
+  'String',
 ];

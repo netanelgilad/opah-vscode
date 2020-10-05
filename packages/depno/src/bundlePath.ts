@@ -51,6 +51,7 @@ const nodeBuildinModules = [
   'zlib',
   'url',
   'readline',
+  'path',
 ];
 
 function validateBinding(
