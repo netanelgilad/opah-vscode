@@ -1,6 +1,7 @@
-import { resolve } from "path";
+import { join, resolve } from "path";
 import { readdirSync } from "fs";
 import merge = require("merge-deep");
+import flatMap from "lodash.flatmap";
 
 function init(modules: {
   typescript: typeof import("typescript/lib/tsserverlibrary");
@@ -52,9 +53,22 @@ function init(modules: {
       return info.languageService;
     }
 
-    let buildInModules = readdirSync(
-      resolve(__dirname, "./builtin-modules")
-    ).map((moduleName: string) => moduleName.substr(0, moduleName.length - 5));
+    let buildInModules = flatMap(
+      readdirSync(resolve(__dirname, "./builtin-modules"), {
+        withFileTypes: true,
+      }),
+      (entry) => {
+        if (entry.isDirectory()) {
+          return readdirSync(
+            join(resolve(__dirname, "./builtin-modules"), entry.name)
+          )
+            .map((file) => `${entry.name}/${file}`)
+            .map((x) => x.substr(0, x.length - 5));
+        } else {
+          return entry.name.substr(0, entry.name.length - 5);
+        }
+      }
+    );
 
     info.languageServiceHost.resolveModuleNames = (
       moduleNames: string[],
