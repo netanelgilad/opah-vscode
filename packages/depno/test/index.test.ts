@@ -522,11 +522,11 @@ describe('runFile', () => {
 					Error: this is my error
 							at eval (eval at <anonymous> (${anyString}:1:1), <anonymous>:4:9)
 							at Object.<anonymous> (${anyString}:1:83)
-							at Module._compile (internal/modules/cjs/loader.js:1151:30)
-							at Object.Module._extensions..js (internal/modules/cjs/loader.js:1171:10)
-							at Module.load (internal/modules/cjs/loader.js:1000:32)
-							at Function.Module._load (internal/modules/cjs/loader.js:899:14)
-							at Function.executeUserEntryPoint [as runMain] (internal/modules/run_main.js:71:12)
+							at Module._compile (internal/modules/cjs/loader.js:1085:30)
+							at Object.Module._extensions..js (internal/modules/cjs/loader.js:1114:10)
+							at Module.load (internal/modules/cjs/loader.js:950:32)
+							at Function.Module._load (internal/modules/cjs/loader.js:791:14)
+							at Function.executeUserEntryPoint [as runMain] (internal/modules/run_main.js:72:12)
 							at internal/main/run_main_module.js:17:47
 					`)
       );
