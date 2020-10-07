@@ -41,7 +41,7 @@ statefulTest(
     await assertThat(
       childProcess,
       willExitSuccessfulyWith(expectedStdout + '\n'),
-      within(7000).milliseconds
+      within(10000).milliseconds
     );
   }
 );
@@ -95,8 +95,8 @@ statefulTest(
       within(10000).milliseconds
     );
 
-    childProcess.stdin.write(answerText + '\n');
-    childProcess.stdin.end();
+    childProcess.stdin!.write(answerText + '\n');
+    childProcess.stdin!.end();
 
     await assertThat(
       childProcess,
