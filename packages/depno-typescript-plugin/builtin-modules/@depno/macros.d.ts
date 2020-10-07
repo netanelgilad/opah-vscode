@@ -20,4 +20,6 @@ declare module "@depno/macros" {
   export function createMacro<T>(
     macroFn: (context: MacroContext) => unknown
   ): T;
+
+  export function canonicalName(node: any): string;
 }
