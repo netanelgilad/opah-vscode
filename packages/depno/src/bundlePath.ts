@@ -614,6 +614,14 @@ async function processMacros(programBeforeMacros: Program, currentURI: string) {
                     }
                   })()
                 );
+              } else if (
+                path.node.name ===
+                fullyQualifiedIdentifier('@depno/macros', 'canonicalName')
+              ) {
+                const arg = path.parentPath.get('arguments.0') as NodePath;
+                path.parentPath.replaceWith(
+                  types.stringLiteral(getDefinitionNameFromNode(arg.node))
+                );
               }
             },
           },
