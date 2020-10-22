@@ -30,11 +30,11 @@ import {
 } from '@babel/types';
 import { dirname, resolve } from 'path';
 import { resolve as urlResolve } from 'url';
-import { getDefinitionNameFromNode } from './getDefinitionNameFromNode';
 import { fullyQualifiedIdentifier } from './fullyQualifiedIdentifier';
 import { getContentsFromURI } from './getContentsFromURI';
-import { globals } from './globals';
-import { isChildScope } from './isChildScope';
+import { getDefinitionNameFromNode } from './getDefinitionNameFromNode';
+import { resolveURIFromDependency } from './resolveURIFromDependency';
+import { validateBinding } from './validateBinding';
 import { withDefaults } from './withDefaults';
 
 export async function bundleDefinitionsForPath(
@@ -386,44 +386,3 @@ const nodeBuildinModules = [
   'readline',
   'path',
 ];
-
-function validateBinding(
-  binding: Binding | undefined,
-  path: NodePath<Identifier>,
-  programPath: NodePath<Program>,
-  pathToBundle: NodePath
-) {
-  if (!binding) {
-    if (!globals.includes(path.node.name)) {
-      // TODO: find a way to use buildCodeFrameError
-      throw new ReferenceError(`Could not find ${path.node.name}`);
-    } else {
-      return false;
-    }
-  } else {
-    if (binding.scope === programPath.scope) {
-      return true;
-    } else {
-      if (!isChildScope(binding.scope, pathToBundle.scope)) {
-        throw path.buildCodeFrameError(
-          `Cannot reference a non program declaration: ${path.node.name}`,
-          ReferenceError
-        );
-      }
-      return false;
-    }
-  }
-}
-
-function resolveURIFromDependency(dependencyPath: string, currentURI: string) {
-  return dependencyPath.startsWith('http://')
-    ? dependencyPath
-    : dependencyPath.startsWith('.')
-    ? currentURI.startsWith('/')
-      ? resolve(dirname(currentURI), dependencyPath)
-      : urlResolve(currentURI, dependencyPath)
-    : dependencyPath;
-  // return dependencyPath.startsWith('.')
-  //   ? resolve(dirname(currentURI), dependencyPath)
-  //   : dependencyPath;
-}

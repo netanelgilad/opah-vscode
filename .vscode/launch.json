@@ -7,10 +7,18 @@
     {
       "type": "node",
       "request": "launch",
-      "runtimeVersion": "13.8.0",
+      "runtimeVersion": "14.13.0",
       "name": "depno/ Debug Current Test",
-      "program": "${workspaceFolder}/node_modules/.bin/jest",
-      "args": ["${fileBasename}"]
+      "program": "${workspaceFolder}/packages/depno/node_modules/.bin/jest",
+      "cwd": "${workspaceFolder}/packages/depno",
+      "args": ["${fileBasename}"],
+      "skipFiles": [
+        "node_modules/**/*.js",
+        "lib/**/*.js",
+        "async_hooks.js",
+        "inspector_async_hook.js",
+        "<node_internals>/**"
+      ]
     }
   ]
 }

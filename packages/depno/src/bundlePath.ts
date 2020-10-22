@@ -1,9 +1,9 @@
 import { transformFromAstAsync } from '@babel/core';
 import { NodePath } from '@babel/traverse';
-import { File, Identifier, Program } from '@babel/types';
-import jsesc from 'jsesc';
+import { Identifier, Program } from '@babel/types';
 import { bundleIntoASingleProgram } from './bundleIntoASingleProgram';
 import { fullyQualifiedIdentifier } from './fullyQualifiedIdentifier';
+import { generateNodeJsCompatibleCode } from './generateNodeJsCompatibleCode';
 import { bundleToDefaultExport } from './macros/bundleToDefaultExport';
 import { canonicalName } from './macros/canonicalName';
 import { createMacro } from './macros/createMacro';
@@ -68,14 +68,4 @@ async function processMacros(programBeforeMacros: Program, currentURI: string) {
   await Promise.all(traversePromises);
 
   return ast!;
-}
-
-async function generateNodeJsCompatibleCode(ast: File, currentURI: string) {
-  const { code } = (await transformFromAstAsync(ast, undefined, {
-    code: true,
-    filename: currentURI,
-    plugins: [require('@babel/plugin-transform-modules-commonjs')],
-  }))!;
-
-  return jsesc(code!, { quotes: 'backtick' });
 }

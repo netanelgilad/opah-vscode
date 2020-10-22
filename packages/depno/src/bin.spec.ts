@@ -1,10 +1,11 @@
 import { Chance } from 'chance';
 import { fork } from 'child_process';
-import { within } from '../test/assertions/Assertion';
+import { otherwise, within } from '../test/assertions/Assertion';
 import { hasExitedSuccessfulyWith as willExitSuccessfulyWith } from '../test/assertions/hasExitedSuccessfulyWith';
 import { willExitSuccessfuly } from '../test/assertions/willExistSuccessfuly';
 import { willPrint } from '../test/assertions/willPrint';
 import { assertThat } from '../test/assertThat';
+import { collectStreamChunks } from '../test/collectStreamChunks';
 import { fixtureFile } from '../test/fixtureFile';
 import { statefulTest } from '../test/statefulTest';
 
@@ -92,7 +93,10 @@ statefulTest(
     await assertThat(
       childProcess,
       willPrint(questionText),
-      within(10000).milliseconds
+      within(10000).milliseconds,
+      otherwise(async () => {
+        return `stderr was: ${await collectStreamChunks(childProcess.stderr!)}`;
+      })
     );
 
     childProcess.stdin!.write(answerText + '\n');

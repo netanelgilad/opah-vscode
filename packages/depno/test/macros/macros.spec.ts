@@ -1,103 +1,86 @@
-import { statefulTest } from '../statefulTest';
-import { fixtureFile } from '../fixtureFile';
-import { runFile } from '../../src';
-import { collectStreamChunks } from '../collectStreamChunks';
 import { file } from 'tempy';
+import { runFile } from '../../src';
+import { hasExitedSuccessfulyWith } from '../assertions/hasExitedSuccessfulyWith';
+import { assertThat } from '../assertThat';
+import { fixtureFile } from '../fixtureFile';
+import { statefulTest } from '../statefulTest';
+declare const describe;
 
 describe('runFile', () => {
-  statefulTest('should run a file with an inline macro', async function*() {
-    const tmpFilePath = file();
+  statefulTest.only(
+    'should run a file with an inline macro',
+    async function*() {
+      const tmpFilePath = file({ extension: 'ts' });
 
-    yield* fixtureFile(
-      `
-				import { createMacro } from '@depno/macros';
-				import { console } from "console";
+      yield* fixtureFile(
+        `
+					import { createMacro } from '@depno/macros';
+					import { console } from "console";
 
-        const LocationBasedSymbol = createMacro(({ reference, types, state }) => {
-          reference.parentPath.replaceWith(
-            types.callExpression(types.identifier('Symbol'), [
-              types.stringLiteral(
-                state.file.opts.filename +
-                  ':' +
-                  reference.node.loc.start.line +
-                  ':' +
-                  reference.node.loc.start.column
-              ),
-            ])
-          );
-        });
+					const LocationBasedSymbol = createMacro(({definitions, definitionCanonicalName, node, types}) => {
+						return {
+							replacement: types.callExpression(types.identifier('Symbol'), [
+								types.stringLiteral(
+									definitionCanonicalName.uri + ':' + node.loc.start.line + ':' + node.loc.start.column
+								),
+							])
+						};
+					});
 
-        export default () => {
-          console.log(LocationBasedSymbol());
-        };
-    `,
-      tmpFilePath
-    );
+					export default () => {
+						console.log(LocationBasedSymbol());
+					};
+				`,
+        tmpFilePath
+      );
 
-    const childProcess = await runFile(tmpFilePath);
+      const childProcess = await runFile(tmpFilePath);
 
-    let stderr = await collectStreamChunks(childProcess.stderr!);
-    expect(stderr).toEqual('');
+      await assertThat(
+        childProcess,
+        hasExitedSuccessfulyWith(`Symbol(${tmpFilePath}:16:18)\n`)
+      );
+    }
+  );
 
-    expect(childProcess.stdout).toBeDefined();
-    let stdout = await collectStreamChunks(childProcess.stdout!);
-    expect(stdout).toEqual(`Symbol(${tmpFilePath}:20:22)\n`);
-  });
-
-  statefulTest(
+  statefulTest.only(
     'should run a file with an inline macro that has ast dependencies',
     async function*() {
       const tmpFilePath = file({ extension: 'ts' });
 
       yield* fixtureFile(
         `
-      import { createMacro } from '@depno/macros';
-      import { CallExpression, Node, Identifier } from "@babel/types";
-			import { NodePath } from "@babel/core";
-			import { console } from "console";
+					import { createMacro } from '@depno/macros';
+					import { console } from "console";
 
-      type TContext = {
-        reference: NodePath<Identifier>,
-        types: typeof import("@babel/types"),
-        state: any
-      }
+					function createSymbolCallExpression(types, value) {
+						return types.callExpression(types.identifier('Symbol'), [
+							types.stringLiteral(value),
+						])
+					}
 
-      function functionMacro(fn: (context: TContext, ...args: Node[]) => Node) {
-        return (context) => {
-          const callExpression = context.reference.parentPath.node as CallExpression;
-          const args = callExpression.arguments;
-          const toReplace = fn(context, ...args);
-          context.reference.parentPath.replaceWith(toReplace);
-        }
-      }
+					const LocationBasedSymbol = createMacro(({definitions, definitionCanonicalName, node, types}) => {
+						return {
+							replacement: createSymbolCallExpression(
+								types,
+								definitionCanonicalName.uri + ':' + node.loc.start.line + ':' + node.loc.start.column
+							)
+						};
+					});
 
-      const LocationBasedSymbol = createMacro(functionMacro(({ reference, types, state }) => {
-        return types.callExpression(types.identifier('Symbol'), [
-          types.stringLiteral(
-            state.file.opts.filename +
-            ':' +
-            reference.node.loc.start.line +
-            ':' +
-            reference.node.loc.start.column
-          ),
-        ])
-      }));
-
-      export default () => {
-        console.log(LocationBasedSymbol());
-      };
-    `,
+					export default () => {
+						console.log(LocationBasedSymbol());
+					};
+				`,
         tmpFilePath
       );
 
       const childProcess = await runFile(tmpFilePath);
 
-      let stderr = await collectStreamChunks(childProcess.stderr!);
-      expect(stderr).toEqual('');
-
-      expect(childProcess.stdout).toBeDefined();
-      let stdout = await collectStreamChunks(childProcess.stdout!);
-      expect(stdout).toEqual(`Symbol(${tmpFilePath}:35:20)\n`);
+      await assertThat(
+        childProcess,
+        hasExitedSuccessfulyWith(`Symbol(${tmpFilePath}:21:18)\n`)
+      );
     }
   );
 });

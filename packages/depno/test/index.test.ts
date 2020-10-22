@@ -515,19 +515,16 @@ describe('runFile', () => {
       let stderr = await collectStreamChunks(childProcess.stderr!);
       expect(stderr).toEqual(
         expect.stringMatching(outputMatchRegExp`
-          undefined:4
+          ${anyString}:2
 						throw new Error('this is my error');
 									^
 
 					Error: this is my error
-							at eval (eval at <anonymous> (${anyString}:1:1), <anonymous>:4:9)
-							at Object.<anonymous> (${anyString}:1:83)
-							at Module._compile (internal/modules/cjs/loader.js:1085:30)
-							at Object.Module._extensions..js (internal/modules/cjs/loader.js:1114:10)
-							at Module.load (internal/modules/cjs/loader.js:950:32)
-							at Function.Module._load (internal/modules/cjs/loader.js:791:14)
-							at Function.executeUserEntryPoint [as runMain] (internal/modules/run_main.js:72:12)
-							at internal/main/run_main_module.js:17:47
+							at ${anyString} (file://${anyString}:2:9)
+							at file://${anyString}:5:1
+							at ModuleJob.run (internal/modules/esm/module_job.js:146:23)
+							at async Loader.import (internal/modules/esm/loader.js:165:24)
+							at async Object.loadESM (internal/process/esm_loader.js:68:5)
 					`)
       );
     }
