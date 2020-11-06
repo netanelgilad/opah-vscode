@@ -1,14 +1,19 @@
-import { ChildProcess, fork } from 'child_process';
-import { NodePath } from '@babel/core';
-import { file } from 'tempy';
-import { writeFileSync } from 'fs';
-import { File } from '@babel/types';
+import template from '@babel/template';
 import * as types from '@babel/types';
+import { stringLiteral } from '@babel/types';
+import { ChildProcess, fork } from 'child_process';
+import { writeFileSync } from 'fs';
 import { resolve } from 'path';
-import { bundlePath } from './bundlePath';
-import { getContentsFromURI } from './getContentsFromURI';
-import traverse from '@babel/traverse';
-import { getASTFromCode } from './getASTFromCode';
+import { file } from 'tempy';
+import { Bundle } from './Bundle';
+import { bundleCanonicalName } from './bundleCanonicalName';
+import {
+  CanonicalName,
+  fullyQualifiedIdentifier,
+} from './fullyQualifiedIdentifier';
+import { generateCodeFromBundle } from './generateCodeFromBundle';
+import { replaceReferencesWithCanonicalNamesInBundle } from './replaceReferencesWithCanonicalNamesInBundle';
+import { runMacrosInBundle } from './runMacrosInBundle';
 
 export async function runFile(
   path: string,
@@ -26,83 +31,72 @@ export async function runFile(
     ? resolve(opts.cwd || process.cwd(), path)
     : path;
 
-  const code = await getContentsFromURI(uri);
-
-  const ast = await getASTFromCode(code, uri);
-
-  const { program, node } = getDeclarationByName(
-    (ast as unknown) as File,
-    exportedFunctionName,
-    uri
-  );
-
-  const functionToRunCode = await bundlePath(node, true, program, uri);
-
-  return executeFunctionCode(functionToRunCode, args, opts.cwd, silent);
-}
-
-function getDeclarationByName(ast: File, name: string, uri: string) {
-  let program: NodePath<types.Program>;
-  let node: NodePath;
-
-  if (name === 'default') {
-    traverse((ast as unknown) as File, {
-      Program(programPath) {
-        program = programPath;
-      },
-      ExportDefaultDeclaration(exportDefaultPath) {
-        node = exportDefaultPath;
-        exportDefaultPath.stop();
-      },
-    });
-  } else {
-    traverse((ast as unknown) as File, {
-      Program(programPath) {
-        program = programPath;
-        const dependencyBinding = programPath.scope.getBinding(name);
-        if (!dependencyBinding) {
-          throw new ReferenceError(
-            `Failed to find binding for ${name} at ${uri}`
-          );
-        }
-        node = dependencyBinding.path;
-      },
-    });
-  }
-
-  return {
-    program: program!,
-    node: node!,
+  const functionCanonicalName = {
+    uri,
+    name: exportedFunctionName,
   };
+
+  const bundle = await bundleCanonicalName(functionCanonicalName);
+
+  return executeBundle(functionCanonicalName, args, bundle, {
+    cwd: opts.cwd,
+    silent,
+  });
 }
 
-function executeFunctionCode(
-  code: string,
+export type ExecutionBundle = Bundle & {
+  expression: types.ExpressionStatement;
+};
+
+async function executeBundle(
+  functionCanonicalName: CanonicalName,
   args: any[],
-  cwd?: string,
-  silent?: boolean
+  bundle: Bundle,
+  opts: {
+    cwd?: string;
+    silent?: boolean;
+  }
 ) {
-  const tmpFile = file({ extension: 'js' });
+  const bundleAfterMacros = await runMacrosInBundle(bundle);
 
   const mappedArgs = args.map(x => {
     if (x === '__stdin__') {
-      return 'process.stdin';
+      return ((template`process.stdin`() as unknown) as types.ExpressionStatement)
+        .expression;
     } else if (x === '__stdout__') {
-      return 'process.stdout';
+      return ((template`process.stdout`() as unknown) as types.ExpressionStatement)
+        .expression;
     } else {
-      return JSON.stringify(x);
+      return stringLiteral(typeof x === 'string' ? x : JSON.stringify(x));
     }
   });
 
-  writeFileSync(tmpFile, `eval(\`${code}\`)(${mappedArgs.join(',')})`);
+  const expression = types.expressionStatement(
+    types.callExpression(
+      types.identifier(
+        fullyQualifiedIdentifier(
+          functionCanonicalName.uri,
+          functionCanonicalName.name
+        )
+      ),
+      mappedArgs
+    )
+  );
 
-  if (process.env.DEPNO_DEBUG) {
-    console.log(tmpFile);
-  }
+  const executionBundle = await replaceReferencesWithCanonicalNamesInBundle({
+    ...bundleAfterMacros,
+    expression,
+  });
+
+  const code = await generateCodeFromBundle(executionBundle);
+
+  const tmpFile = file({ extension: 'mjs' });
+
+  writeFileSync(tmpFile, code);
 
   return fork(tmpFile, [], {
-    cwd,
-    silent,
+    cwd: opts.cwd,
+    silent: opts.silent,
     execArgv: ['--unhandled-rejections=strict'],
   });
 }

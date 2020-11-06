@@ -8,7 +8,7 @@ export async function collectWhileMatches(
     let result = '';
     let currentPosition = 0;
 
-    const listener = chunk => {
+    const listener = (chunk: any) => {
       const chunkAsString = String(chunk);
       result += chunkAsString;
       if (

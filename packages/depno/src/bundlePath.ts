@@ -1,81 +1,173 @@
-import { transformFromAstAsync } from '@babel/core';
-import { NodePath } from '@babel/traverse';
-import { File, Identifier, Program } from '@babel/types';
-import jsesc from 'jsesc';
-import { bundleIntoASingleProgram } from './bundleIntoASingleProgram';
-import { fullyQualifiedIdentifier } from './fullyQualifiedIdentifier';
-import { bundleToDefaultExport } from './macros/bundleToDefaultExport';
-import { canonicalName } from './macros/canonicalName';
-import { createMacro } from './macros/createMacro';
+import { NodePath } from '@babel/core';
+import { Binding } from '@babel/traverse';
+import {
+  CallExpression,
+  Expression,
+  expressionStatement,
+  Identifier,
+  isCallExpression,
+  isIdentifier,
+  isVariableDeclarator,
+  Program,
+  VariableDeclarator,
+} from '@babel/types';
+import { Bundle, CaononicalDefinitionNode, MacroFunction } from './Bundle';
+import { bundleCanonicalName } from './bundleCanonicalName';
+import { canonicalIdentifier, CanonicalName } from './fullyQualifiedIdentifier';
+import { generateCodeFromBundle } from './generateCodeFromBundle';
+import { getCanonicalDefinitionNode } from './getCanonicalDefinitionNode';
+import { getCanonicalNameFromPath } from './getCanonicalNameFromPath';
+import { isReferencedDefinitionNode } from './isReferencedDefinitionNode';
+import { replaceReferencesWithCanonicalNamesInBundle } from './replaceReferencesWithCanonicalNamesInBundle';
+import { validateBinding } from './validateBinding';
 
 export async function bundlePath(
   pathToBundle: NodePath,
-  isDefinition: boolean,
   programPath: NodePath<Program>,
-  currentURI: string
-) {
-  const programBeforeMacros = await bundleIntoASingleProgram(
-    pathToBundle,
-    isDefinition,
-    programPath,
-    currentURI
+  uri: string
+): Promise<Bundle> {
+  const references = getReferencesToCanonicalNames(pathToBundle, programPath);
+
+  const referencesCanonicalNames = Array.from(references.entries()).map(
+    ([binding, name]) =>
+      [getCanonicalNameFromPath(binding.path, uri), binding, name] as const
   );
 
-  const ast = await processMacros(programBeforeMacros, currentURI);
+  const referencesToBundle = referencesCanonicalNames.filter(
+    ([referenceCanonicalName]) =>
+      !(
+        referenceCanonicalName.uri === '@depno/macros' &&
+        referenceCanonicalName.name === 'createMacro'
+      )
+  );
 
-  return generateNodeJsCompatibleCode(ast, currentURI);
+  const {
+    definitions,
+    macros,
+    referencesInDefinitions,
+  } = await getDefinitionsFromReferences(uri, referencesToBundle, programPath);
+
+  // replaceReferencesWithCanonicalNames(uri, references);
+
+  const canonicalName = getCanonicalNameFromPath(pathToBundle, uri);
+
+  const referencesInDefinition = new Map(
+    referencesCanonicalNames.map(([canonicalName, _, localName]) => {
+      return [localName, canonicalName];
+    })
+  );
+
+  if (isMacroPath(pathToBundle, referencesInDefinition)) {
+    referencesInDefinitions.set(
+      canonicalIdentifier(canonicalName),
+      referencesInDefinition
+    );
+    const macroBundle = await replaceReferencesWithCanonicalNamesInBundle(
+      {
+        definitions,
+        referencesInDefinitions,
+        macros,
+        expression: expressionStatement(
+          pathToBundle.node.init.arguments[0] as Expression
+        ),
+      },
+      referencesInDefinition
+    );
+    const code = await generateCodeFromBundle(macroBundle);
+    const macroFunction = eval(code);
+    macros.set(canonicalIdentifier(canonicalName), macroFunction);
+  } else if (isReferencedDefinitionNode(pathToBundle.node)) {
+    definitions.set(
+      canonicalIdentifier(canonicalName),
+      getCanonicalDefinitionNode(canonicalName, pathToBundle.node)
+    );
+    referencesInDefinitions.set(
+      canonicalIdentifier(canonicalName),
+      referencesInDefinition
+    );
+  }
+
+  return { definitions, macros, referencesInDefinitions };
 }
 
-async function processMacros(programBeforeMacros: Program, currentURI: string) {
-  const traversePromises: Promise<any>[] = [];
+function getReferencesToCanonicalNames(
+  path: NodePath,
+  programPath: NodePath<Program>
+): Map<Binding, string> {
+  const references = new Map<Binding, string>();
 
-  const { ast } = (await transformFromAstAsync(
-    programBeforeMacros!,
-    undefined,
-    {
-      filename: currentURI,
-      ast: true,
-      code: false,
-      plugins: [
-        () => ({
-          visitor: {
-            ReferencedIdentifier(path: NodePath<Identifier>, state: any) {
-              if (
-                path.node.name ===
-                fullyQualifiedIdentifier('bundler', 'bundleToDefaultExport')
-              ) {
-                traversePromises.push(
-                  bundleToDefaultExport(currentURI, path, state)
-                );
-              } else if (
-                path.node.name ===
-                fullyQualifiedIdentifier('@depno/macros', 'createMacro')
-              ) {
-                traversePromises.push(createMacro(currentURI, path, state));
-              } else if (
-                path.node.name ===
-                fullyQualifiedIdentifier('@depno/macros', 'canonicalName')
-              ) {
-                canonicalName(path);
-              }
-            },
-          },
-        }),
-      ],
+  path.traverse({
+    // @ts-ignore
+    ReferencedIdentifier(referencePath: NodePath<Identifier>) {
+      const binding = referencePath.scope.getBinding(referencePath.node.name);
+      if (
+        validateBinding(binding, referencePath, programPath, path) &&
+        binding!.path !== path
+      ) {
+        const existingPathsForCanonicalName = references.get(binding!);
+        if (!existingPathsForCanonicalName) {
+          references.set(binding!, referencePath.node.name);
+        }
+      }
+    },
+  });
+
+  return references;
+}
+
+async function getDefinitionsFromReferences(
+  uri: string,
+  referencesToBundle: Array<readonly [CanonicalName, Binding, string]>,
+  programPath: NodePath<Program>
+) {
+  let definitions = new Map<string, CaononicalDefinitionNode>();
+  let macros = new Map<string, MacroFunction>();
+  let referencesInDefinitions = new Map<string, Map<string, CanonicalName>>();
+  for (const [referenceCanonicalName, reference] of referencesToBundle) {
+    let definitionsOfTheReference: Map<string, CaononicalDefinitionNode>;
+    let referencesInDefinitionsOfTheReference: Map<
+      string,
+      Map<string, CanonicalName>
+    >;
+    let macrosOfTheReference: Map<string, MacroFunction>;
+
+    if (!definitions.has(canonicalIdentifier(referenceCanonicalName))) {
+      if (referenceCanonicalName.uri !== uri) {
+        const bundleResult = await bundleCanonicalName(referenceCanonicalName);
+        definitionsOfTheReference = bundleResult.definitions;
+        macrosOfTheReference = bundleResult.macros;
+        referencesInDefinitionsOfTheReference =
+          bundleResult.referencesInDefinitions;
+      } else {
+        const bundleResult = await bundlePath(reference.path, programPath, uri);
+        definitionsOfTheReference = bundleResult.definitions;
+        macrosOfTheReference = bundleResult.macros;
+        referencesInDefinitionsOfTheReference =
+          bundleResult.referencesInDefinitions;
+      }
+
+      definitions = new Map([...definitions, ...definitionsOfTheReference]);
+      macros = new Map([...macros, ...macrosOfTheReference]);
+      referencesInDefinitions = new Map([
+        ...referencesInDefinitions,
+        ...referencesInDefinitionsOfTheReference,
+      ]);
     }
-  ))!;
-
-  await Promise.all(traversePromises);
-
-  return ast!;
+  }
+  return { definitions, macros, referencesInDefinitions };
 }
 
-async function generateNodeJsCompatibleCode(ast: File, currentURI: string) {
-  const { code } = (await transformFromAstAsync(ast, undefined, {
-    code: true,
-    filename: currentURI,
-    plugins: [require('@babel/plugin-transform-modules-commonjs')],
-  }))!;
-
-  return jsesc(code!, { quotes: 'backtick' });
+function isMacroPath(
+  path: NodePath,
+  referencesInDefinition: Map<string, CanonicalName>
+): path is NodePath<VariableDeclarator & { init: CallExpression }> {
+  return (
+    isVariableDeclarator(path.node) &&
+    isCallExpression(path.node.init) &&
+    isIdentifier(path.node.init.callee) &&
+    referencesInDefinition.has(path.node.init.callee.name) &&
+    canonicalIdentifier(
+      referencesInDefinition.get(path.node.init.callee.name)!
+    ) === canonicalIdentifier({ uri: '@depno/macros', name: 'createMacro' })
+  );
 }
