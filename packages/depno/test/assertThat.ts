@@ -15,12 +15,12 @@ export async function assertThat<T>(
   assertion: Assertion<T>,
   within?: Within,
   otherwise?: Otherwise
-);
+): Promise<void>;
 export async function assertThat<T>(
   something: T,
   assertion: Assertion<T>,
   otherwise?: Otherwise
-);
+): Promise<void>;
 export async function assertThat<T>(
   something: T,
   assertion: Assertion<T>,
@@ -33,7 +33,7 @@ export async function assertThat<T>(
     : maybeOtherwise;
   try {
     await new Promise((resolve, reject) => {
-      let withinTimeout;
+      let withinTimeout: NodeJS.Timeout;
       if (within) {
         withinTimeout = setTimeout(() => {
           reject(
@@ -51,7 +51,7 @@ export async function assertThat<T>(
             })
             .catch(reject);
         } else {
-          clearTimeout(withinTimeout);
+          clearTimeout(withinTimeout!);
           resolve();
         }
       } catch (err) {

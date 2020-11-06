@@ -50,6 +50,7 @@
     "@types/jest": "^25.2.1",
     "@types/jsesc": "^2.5.0",
     "@types/node": "^13.13.4",
+    "@types/rimraf": "^3.0.0",
     "@zeit/ncc": "^0.22.1",
     "babel-jest": "^25.5.1",
     "chance": "^1.1.4",
