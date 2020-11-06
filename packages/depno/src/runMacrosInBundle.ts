@@ -2,19 +2,22 @@ import { transformFromAstAsync } from '@babel/core';
 import { NodePath } from '@babel/traverse';
 import * as types from '@babel/types';
 import { Identifier } from '@babel/types';
-import { ExecutionBundle } from '.';
-import { CaononicalDefinitionNode } from './bundleDefinitionsForPath2';
-import { canonicalNameFromCanonicalIdentifier } from './fullyQualifiedIdentifier';
+import { Bundle, CaononicalDefinitionNode } from './Bundle';
+import {
+  canonicalIdentifier,
+  canonicalNameFromCanonicalIdentifier,
+} from './fullyQualifiedIdentifier';
 
-export async function runMacrosInBundle(
-  bundle: ExecutionBundle
-): Promise<ExecutionBundle> {
+export async function runMacrosInBundle(bundle: Bundle): Promise<Bundle> {
   let definitions = bundle.definitions;
   for (const [macroCanonicalIdentifier, macroFunction] of bundle.macros) {
     for (const [
       definitionCanonicalIdentifier,
       definitionNode,
     ] of bundle.definitions) {
+      const currentDefinitionReferneces = bundle.referencesInDefinitions.get(
+        definitionCanonicalIdentifier
+      );
       let replacementHappened = false;
       const { ast } = (await transformFromAstAsync(
         types.program([definitionNode]),
@@ -28,9 +31,16 @@ export async function runMacrosInBundle(
               visitor: {
                 // @ts-ignore
                 ReferencedIdentifier(referencePath: NodePath<Identifier>) {
-                  if (referencePath.node.name === macroCanonicalIdentifier) {
+                  if (
+                    currentDefinitionReferneces &&
+                    currentDefinitionReferneces.has(referencePath.node.name)! &&
+                    canonicalIdentifier(
+                      currentDefinitionReferneces.get(referencePath.node.name)!
+                    ) === macroCanonicalIdentifier
+                  ) {
                     const macroResult = macroFunction({
                       definitions: bundle.definitions,
+                      referencesInDefinitions: bundle.referencesInDefinitions,
                       types,
                       node: referencePath.parentPath
                         .node as types.CallExpression,
@@ -64,7 +74,7 @@ export async function runMacrosInBundle(
 
   return {
     definitions,
-    expression: bundle.expression,
+    referencesInDefinitions: bundle.referencesInDefinitions,
     macros: new Map(),
   };
 }

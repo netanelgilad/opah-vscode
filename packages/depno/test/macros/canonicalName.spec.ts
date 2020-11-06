@@ -1,5 +1,5 @@
+import { inspect } from 'util';
 import { runFile } from '../../src';
-import { fullyQualifiedIdentifier } from '../../src/fullyQualifiedIdentifier';
 import { hasExitedSuccessfulyWith } from '../assertions/hasExitedSuccessfulyWith';
 import { assertThat } from '../assertThat';
 import { fixtureFile } from '../fixtureFile';
@@ -14,6 +14,7 @@ describe('runFile', () => {
         const tmpFilePath = yield* fixtureFile(`
 				import {console} from "console";
 				import {createMacro} from "@depno/macros";
+				import { canonicalIdentifier } from "@depno/core";
 
 				export function fibonacci(num: number): number {
 					if (num <= 1) return 1;
@@ -21,9 +22,16 @@ describe('runFile', () => {
 					return fibonacci(num - 1) + fibonacci(num - 2);
 				}
 
-				const canonicalName = createMacro(({definitions, definitionCanonicalName, node, types}) => {
+				const canonicalName = createMacro(({definitions, definitionCanonicalName, referencesInDefinitions, node, types}) => {
+					const referencedCanonicalName = referencesInDefinitions
+						.get(canonicalIdentifier(definitionCanonicalName))
+						.get(node.arguments[0].name)
+
 					return {
-						replacement: types.stringLiteral(node.arguments[0].name)
+						replacement: types.objectExpression([
+							types.objectProperty(types.identifier("uri"), types.stringLiteral(referencedCanonicalName.uri)),
+							types.objectProperty(types.identifier("name"), types.stringLiteral(referencedCanonicalName.name))
+						])
 					}
 				})
 
@@ -37,7 +45,7 @@ describe('runFile', () => {
         await assertThat(
           childProcess,
           hasExitedSuccessfulyWith(
-            fullyQualifiedIdentifier(tmpFilePath, 'fibonacci') + '\n'
+            inspect({ uri: tmpFilePath, name: 'fibonacci' }, null, 2) + '\n'
           )
         );
       }

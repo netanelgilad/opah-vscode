@@ -5,16 +5,14 @@ import { ChildProcess, fork } from 'child_process';
 import { writeFileSync } from 'fs';
 import { resolve } from 'path';
 import { file } from 'tempy';
+import { Bundle } from './Bundle';
 import { bundleCanonicalName } from './bundleCanonicalName';
-import {
-  CaononicalDefinitionNode,
-  MacroFunction,
-} from './bundleDefinitionsForPath2';
 import {
   CanonicalName,
   fullyQualifiedIdentifier,
 } from './fullyQualifiedIdentifier';
 import { generateCodeFromBundle } from './generateCodeFromBundle';
+import { replaceReferencesWithCanonicalNamesInBundle } from './replaceReferencesWithCanonicalNamesInBundle';
 import { runMacrosInBundle } from './runMacrosInBundle';
 
 export async function runFile(
@@ -33,30 +31,34 @@ export async function runFile(
     ? resolve(opts.cwd || process.cwd(), path)
     : path;
 
-  const bundle = await createExecutionBundle(
-    {
-      uri,
-      name: exportedFunctionName,
-    },
-    args
-  );
+  const functionCanonicalName = {
+    uri,
+    name: exportedFunctionName,
+  };
 
-  return executeBundle(bundle, {
+  const bundle = await bundleCanonicalName(functionCanonicalName);
+
+  return executeBundle(functionCanonicalName, args, bundle, {
     cwd: opts.cwd,
     silent,
   });
 }
 
-export type ExecutionBundle = {
-  expression: types.Expression;
-  definitions: Map<string, CaononicalDefinitionNode>;
-  macros: Map<string, MacroFunction>;
+export type ExecutionBundle = Bundle & {
+  expression: types.ExpressionStatement;
 };
 
-async function createExecutionBundle(
+async function executeBundle(
   functionCanonicalName: CanonicalName,
-  args: any[]
-): Promise<ExecutionBundle> {
+  args: any[],
+  bundle: Bundle,
+  opts: {
+    cwd?: string;
+    silent?: boolean;
+  }
+) {
+  const bundleAfterMacros = await runMacrosInBundle(bundle);
+
   const mappedArgs = args.map(x => {
     if (x === '__stdin__') {
       return ((template`process.stdin`() as unknown) as types.ExpressionStatement)
@@ -68,36 +70,25 @@ async function createExecutionBundle(
       return stringLiteral(typeof x === 'string' ? x : JSON.stringify(x));
     }
   });
-  const { definitions, macros } = await bundleCanonicalName(
-    functionCanonicalName
+
+  const expression = types.expressionStatement(
+    types.callExpression(
+      types.identifier(
+        fullyQualifiedIdentifier(
+          functionCanonicalName.uri,
+          functionCanonicalName.name
+        )
+      ),
+      mappedArgs
+    )
   );
 
-  const expression = types.callExpression(
-    types.identifier(
-      fullyQualifiedIdentifier(
-        functionCanonicalName.uri,
-        functionCanonicalName.name
-      )
-    ),
-    mappedArgs
-  );
-
-  return {
+  const executionBundle = await replaceReferencesWithCanonicalNamesInBundle({
+    ...bundleAfterMacros,
     expression,
-    definitions,
-    macros,
-  };
-}
+  });
 
-async function executeBundle(
-  bundle: ExecutionBundle,
-  opts: {
-    cwd?: string;
-    silent?: boolean;
-  }
-) {
-  const bundleAfterMacros = await runMacrosInBundle(bundle);
-  const code = await generateCodeFromBundle(bundleAfterMacros);
+  const code = await generateCodeFromBundle(executionBundle);
 
   const tmpFile = file({ extension: 'mjs' });
 
