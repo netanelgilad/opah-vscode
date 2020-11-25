@@ -12,7 +12,4 @@ export function resolveURIFromDependency(
       ? resolve(dirname(currentURI), dependencyPath)
       : urlResolve(currentURI, dependencyPath)
     : dependencyPath;
-  // return dependencyPath.startsWith('.')
-  //   ? resolve(dirname(currentURI), dependencyPath)
-  //   : dependencyPath;
 }

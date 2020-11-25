@@ -520,12 +520,8 @@ describe('runFile', () => {
 									^
 
 					Error: this is my error
-							at ${anyString} (file://${anyString}:2:9)
-							at file://${anyString}:5:1
-							at ModuleJob.run (internal/modules/esm/module_job.js:146:23)
-							at async Loader.import (internal/modules/esm/loader.js:165:24)
-							at async Object.loadESM (internal/process/esm_loader.js:68:5)
-					`)
+							at ${anyString}:2:9
+							at ${anyString}:5:10`)
       );
     }
   );

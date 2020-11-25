@@ -21,17 +21,17 @@ export function getCanonicalNameFromPath(
     const importSource = (path.parentPath as NodePath<ImportDeclaration>).node
       .source.value;
     const dependencyURI = resolveURIFromDependency(importSource, uri);
-    return {
+    return CanonicalName({
       uri: dependencyURI,
       name: getImportedFromSpecifier(path.node),
-    };
+    });
   } else if (isReferencedDefinitionNode(path.node)) {
-    return {
+    return CanonicalName({
       uri: uri,
       name: isExportDefaultDeclaration(path.node)
         ? 'default'
         : path.node.id.name,
-    };
+    });
   } else {
     return unimplemented();
   }

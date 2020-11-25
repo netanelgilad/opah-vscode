@@ -3,17 +3,13 @@ import * as types from '@babel/types';
 import { stringLiteral } from '@babel/types';
 import { ChildProcess, fork } from 'child_process';
 import { writeFileSync } from 'fs';
+import { Map } from 'immutable';
 import { resolve } from 'path';
 import { file } from 'tempy';
-import { Bundle } from './Bundle';
+import { Bundle, Definition, emptyBundle, ExecutionBundle } from './Bundle';
 import { bundleCanonicalName } from './bundleCanonicalName';
-import {
-  CanonicalName,
-  fullyQualifiedIdentifier,
-} from './fullyQualifiedIdentifier';
+import { CanonicalName } from './fullyQualifiedIdentifier';
 import { generateCodeFromBundle } from './generateCodeFromBundle';
-import { replaceReferencesWithCanonicalNamesInBundle } from './replaceReferencesWithCanonicalNamesInBundle';
-import { runMacrosInBundle } from './runMacrosInBundle';
 
 export async function runFile(
   path: string,
@@ -31,22 +27,23 @@ export async function runFile(
     ? resolve(opts.cwd || process.cwd(), path)
     : path;
 
-  const functionCanonicalName = {
+  const functionCanonicalName = CanonicalName({
     uri,
     name: exportedFunctionName,
-  };
+  });
 
-  const bundle = await bundleCanonicalName(functionCanonicalName);
+  const [, , bundle] = await bundleCanonicalName(
+    Map(),
+    Map(),
+    emptyBundle(),
+    functionCanonicalName
+  );
 
   return executeBundle(functionCanonicalName, args, bundle, {
     cwd: opts.cwd,
     silent,
   });
 }
-
-export type ExecutionBundle = Bundle & {
-  expression: types.ExpressionStatement;
-};
 
 async function executeBundle(
   functionCanonicalName: CanonicalName,
@@ -57,7 +54,7 @@ async function executeBundle(
     silent?: boolean;
   }
 ) {
-  const bundleAfterMacros = await runMacrosInBundle(bundle);
+  // const bundleAfterMacros = await runMacrosInBundle(bundle);
 
   const mappedArgs = args.map(x => {
     if (x === '__stdin__') {
@@ -71,26 +68,23 @@ async function executeBundle(
     }
   });
 
-  const expression = types.expressionStatement(
-    types.callExpression(
-      types.identifier(
-        fullyQualifiedIdentifier(
-          functionCanonicalName.uri,
-          functionCanonicalName.name
-        )
-      ),
-      mappedArgs
-    )
+  const mainFunctionName = 'main';
+
+  const { expression } = types.expressionStatement(
+    types.callExpression(types.identifier(mainFunctionName), mappedArgs)
   );
 
-  const executionBundle = await replaceReferencesWithCanonicalNamesInBundle({
-    ...bundleAfterMacros,
-    expression,
+  const executionBundle: ExecutionBundle = ExecutionBundle({
+    definitions: bundle,
+    execute: Definition({
+      expression,
+      references: Map([[mainFunctionName, functionCanonicalName]]),
+    }),
   });
 
   const code = await generateCodeFromBundle(executionBundle);
 
-  const tmpFile = file({ extension: 'mjs' });
+  const tmpFile = file({ extension: 'js' });
 
   writeFileSync(tmpFile, code);
 

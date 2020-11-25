@@ -20,5 +20,5 @@ function sanitizeURI(uri: string) {
     .replace(/\./g, '$___')
     .replace(/@/g, '$____')
     .replace(/:/g, '$_____')
-    .replace(/-/, '$_______');
+    .replace(/-/, '$______');
 }

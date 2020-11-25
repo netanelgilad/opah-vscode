@@ -635,20 +635,28 @@ export type Definition = WithReferences & {
   ast: CanonicalDefinitionAST;
 };
 
+export type CanonicalIdentifier = string;
+
 export type Bundle = {
-  definitions: Map<string, Definition>;
+  definitions: Map<CanonicalIdentifier, Definition>;
 };
 
-export type ExecutionBundle = Bundle & {
-  executeExpression: WithReferences & {
-    ast: Expression;
+export type ExecutionBundle<TReturn = unknown> = { _tag?: TReturn } & Bundle & {
+    executeExpression: WithReferences & {
+      ast: Expression;
+    };
   };
-};
 
 export type Awaitable<T> = T | Promise<T>;
 
 export function createMacro<T>(
-  macroFn: (...args: ExecutionBundle[]) => Awaitable<ExecutionBundle>
+  macroFn: <TArgs extends unknown[]>(
+    ...args: { [K in keyof TArgs]: ExecutionBundle<K> }
+  ) => Awaitable<ExecutionBundle>
 ): T;
 
-export function executeBundle(bundle: ExecutionBundle): Awaitable<unknown>;
+export function executeBundle<TReturn = unknown>(
+  bundle: ExecutionBundle<TReturn>
+): Awaitable<TReturn>;
+
+export function canonicalIdentifier(node: any): CanonicalIdentifier;

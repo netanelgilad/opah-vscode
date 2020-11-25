@@ -1,13 +1,13 @@
 import {
-  CallExpression,
   ClassDeclaration,
   ExportDefaultDeclaration,
+  Expression,
   FunctionDeclaration,
-  ImportDeclaration,
-  Node,
-  VariableDeclaration,
+  numericLiteral,
+  unaryExpression,
   VariableDeclarator,
 } from '@babel/types';
+import { Map, Record, RecordOf } from 'immutable';
 import { CanonicalName } from './fullyQualifiedIdentifier';
 
 export type ReferencedDefinitionNode =
@@ -16,25 +16,39 @@ export type ReferencedDefinitionNode =
   | ClassDeclaration
   | ExportDefaultDeclaration;
 
-export type CaononicalDefinitionNode =
-  | ImportDeclaration
-  | VariableDeclaration
-  | FunctionDeclaration
-  | ClassDeclaration;
+export type MacroFunction = (...args: ExecutionBundle[]) => ExecutionBundle;
 
-export type MacroFunction = (opts: {
-  definitions: Map<string, CaononicalDefinitionNode>;
-  referencesInDefinitions: Map<string, Map<string, CanonicalName>>;
-  types: typeof import('@babel/types');
-  node: CallExpression;
-  definitionCanonicalName: CanonicalName;
-}) => {
-  replacement?: Node;
-  definitions?: Map<string, CaononicalDefinitionNode>;
+export type LocalName = string;
+
+export type Definitions = Map<CanonicalName, Expression>;
+
+export type DefinitionProps<ExpressionType extends Expression = Expression> = {
+  expression: ExpressionType;
+  references: Map<LocalName, CanonicalName>;
 };
 
-export type Bundle = {
-  definitions: Map<string, CaononicalDefinitionNode>;
-  referencesInDefinitions: Map<string, Map<string, CanonicalName>>;
-  macros: Map<string, MacroFunction>;
+export const Definition = Record<DefinitionProps>({
+  expression: unaryExpression('void', numericLiteral(0)),
+  references: Map(),
+});
+
+export type Definition<
+  ExpressionType extends Expression = Expression
+> = RecordOf<DefinitionProps<ExpressionType>>;
+
+export type Bundle = Map<CanonicalName, Definition>;
+
+export type ExecutionBundleProps = {
+  definitions: Bundle;
+  execute: Definition;
 };
+
+export type ExecutionBundle = RecordOf<ExecutionBundleProps>;
+export const ExecutionBundle = Record<ExecutionBundleProps>({
+  definitions: Map(),
+  execute: Definition(),
+});
+
+export function emptyBundle(): Bundle {
+  return Map();
+}

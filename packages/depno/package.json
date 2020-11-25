@@ -12,7 +12,7 @@
     "build:docker": "docker build . -t netanelgilad/depno:`git rev-parse HEAD`",
     "publish:docker": "docker push netanelgilad/depno:`git rev-parse HEAD`",
     "tag:docker": "docker tag netanelgilad/depno:`git rev-parse HEAD` netanelgilad/depno:latest && docker push netanelgilad/depno:latest",
-    "test": "jest"
+    "test": "jest --config=jest.config.ts"
   },
   "pkg": {
     "assets": [
@@ -40,21 +40,24 @@
     "async": "^3.2.0",
     "axios": "^0.19.2",
     "babel-errors": "^1.1.1",
+    "immutable": "^4.0.0-rc.12",
     "jsesc": "^3.0.1",
-    "tempy": "^0.5.0"
+    "source-map-support": "^0.5.19",
+    "tempy": "^0.5.0",
+    "variant": "^2.0.2-beta.8"
   },
   "devDependencies": {
     "@babel/cli": "^7.8.4",
     "@types/async": "^3.2.1",
     "@types/chance": "^1.0.10",
-    "@types/jest": "^25.2.1",
+    "@types/jest": "^26.0.15",
     "@types/jsesc": "^2.5.0",
     "@types/node": "^13.13.4",
     "@types/rimraf": "^3.0.0",
     "@zeit/ncc": "^0.22.1",
     "babel-jest": "^25.5.1",
     "chance": "^1.1.4",
-    "jest": "^25.5.4",
+    "jest": "^26.6.3",
     "pkg": "^4.4.8",
     "prettier": "^1.19.1",
     "rimraf": "^3.0.2",
