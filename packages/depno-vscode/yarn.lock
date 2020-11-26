@@ -396,10 +396,10 @@ define-properties@^1.1.2, define-properties@^1.1.3:
   dependencies:
     object-keys "^1.0.12"
 
-depno-typescript-plugin@^0.0.124:
-  version "0.0.124"
-  resolved "https://registry.yarnpkg.com/depno-typescript-plugin/-/depno-typescript-plugin-0.0.124.tgz#7190c3d2523c682ef0e23684560ae6818a8654b9"
-  integrity sha512-XGEuJZgJQuLjUCNZVcAeFRTTni2XWu3EuCm3h+RdcVCOHpTe7shgIDH/IGvja8qP9PkbEM62QKxu9jM43Euk/A==
+depno-typescript-plugin@^0.0.127:
+  version "0.0.127"
+  resolved "https://registry.yarnpkg.com/depno-typescript-plugin/-/depno-typescript-plugin-0.0.127.tgz#204291dc44c993d905fcfb0a132982c5192b74ee"
+  integrity sha512-b6eET6K+23cnz0ILgmxuqri8QL1tNkMeZT4GpVNZJmowRtHdXwKDBz4dbYyqIa0aI10kZ/azrZTgLEapjaKwIw==
   dependencies:
     lodash.flatmap "^4.5.0"
     merge-deep "^3.0.2"

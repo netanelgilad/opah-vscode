@@ -1,3 +1,5 @@
+import { RecordOf } from "@depno/immutable";
+
 export type ASTNode<Type extends string> = {
   type: Type;
 };
@@ -621,42 +623,31 @@ export type VariableDeclaration = ASTNode<"VariableDeclaration"> & {
   declare: boolean | null;
 };
 
-export type CanonicalDefinitionAST =
-  | ImportDeclaration
-  | VariableDeclaration
-  | FunctionDeclaration
-  | ClassDeclaration;
+export type LocalName = string;
 
-export type WithReferences = {
-  references: Map<string, Definition>;
+export type CanonicalName = RecordOf<{
+  uri: string;
+  name: string;
+}>;
+
+import { Map } from "@depno/immutable";
+
+export type DefinitionProps<ExpressionType extends Expression = Expression> = {
+  expression: ExpressionType;
+  references: Map<LocalName, CanonicalName>;
 };
 
-export type Definition = WithReferences & {
-  ast: CanonicalDefinitionAST;
-};
+export type Definition<
+  ExpressionType extends Expression = Expression
+> = RecordOf<DefinitionProps<ExpressionType>>;
 
-export type CanonicalIdentifier = string;
+export type Bundle = Map<CanonicalName, Definition>;
 
-export type Bundle = {
-  definitions: Map<CanonicalIdentifier, Definition>;
-};
+export type ExecutionBundle = RecordOf<{
+  definitions: Bundle;
+  execute: Definition;
+}>;
 
-export type ExecutionBundle<TReturn = unknown> = { _tag?: TReturn } & Bundle & {
-    executeExpression: WithReferences & {
-      ast: Expression;
-    };
-  };
+export type MacroFunction = (...args: ExecutionBundle[]) => ExecutionBundle;
 
-export type Awaitable<T> = T | Promise<T>;
-
-export function createMacro<T>(
-  macroFn: <TArgs extends unknown[]>(
-    ...args: { [K in keyof TArgs]: ExecutionBundle<K> }
-  ) => Awaitable<ExecutionBundle>
-): T;
-
-export function executeBundle<TReturn = unknown>(
-  bundle: ExecutionBundle<TReturn>
-): Awaitable<TReturn>;
-
-export function canonicalIdentifier(node: any): CanonicalIdentifier;
+export function createMacro<T>(fn: MacroFunction): T;
