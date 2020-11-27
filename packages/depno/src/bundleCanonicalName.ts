@@ -45,6 +45,7 @@ import { globals } from './globals';
 import { isReferencedDefinitionNode } from './isReferencedDefinitionNode';
 import { nodeModules } from './nodeModules';
 import { DefinitionNotFoundInBundleError } from './DefinitionNotFoundInBundleError';
+import { DefinitionNotFoundInCanonicalDefinitionError } from './DefinitionNotFoundInCanonicalDefinitionError';
 
 export async function bundleCanonicalName(
   uriStore: URIStore,
@@ -130,7 +131,7 @@ export async function bundleCanonicalName(
       );
     } catch (err) {
       if (isType(DefinitionNotFoundError, err)) {
-        throw DefinitionNotFoundInCanonicalDefinition({
+        throw DefinitionNotFoundInCanonicalDefinitionError({
           canonicalName,
           reference: err.reference,
         });
@@ -283,11 +284,6 @@ function getDefinitionAndProgramPaths(ast: File, name: string) {
     programPath: programPath!,
   };
 }
-
-const DefinitionNotFoundInCanonicalDefinition = variant(
-  'DefinitionNotFoundInCanonicalDefinition',
-  fields<{ canonicalName: CanonicalName; reference: string }>()
-);
 
 class NodeWithoutInitError extends Error {}
 class ExportDefaultNonReferencedDefinitionNode extends Error {
