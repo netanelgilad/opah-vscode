@@ -36,16 +36,16 @@ import {
   MacroFunction,
   ReferencedDefinitionNode,
 } from './Bundle';
+import { DefinitionNotFoundInBundleError } from './DefinitionNotFoundInBundleError';
+import { DefinitionNotFoundInCanonicalDefinitionError } from './DefinitionNotFoundInCanonicalDefinitionError';
 import { CanonicalName } from './fullyQualifiedIdentifier';
-import { generateCodeFromBundle } from './generateCodeFromBundle';
 import { ASTStore, getASTFromCode } from './getASTFromCode';
 import { getCanonicalNameFromPath } from './getCanonicalNameFromPath';
 import { getContentsFromURI, URIStore } from './getContentsFromURI';
 import { globals } from './globals';
 import { isReferencedDefinitionNode } from './isReferencedDefinitionNode';
 import { nodeModules } from './nodeModules';
-import { DefinitionNotFoundInBundleError } from './DefinitionNotFoundInBundleError';
-import { DefinitionNotFoundInCanonicalDefinitionError } from './DefinitionNotFoundInCanonicalDefinitionError';
+import { executeBundle } from './runtime';
 
 export async function bundleCanonicalName(
   uriStore: URIStore,
@@ -81,6 +81,23 @@ export async function bundleCanonicalName(
       bundle.set(
         canonicalName,
         Definition({ expression: identifier('console'), references: Map() })
+      ),
+    ];
+  } else if (canonicalName.uri === '@depno/runtime') {
+    return [
+      uriStore,
+      astStore,
+      bundle.set(
+        canonicalName,
+        Definition({
+          expression: memberExpression(
+            callExpression(identifier('require'), [
+              stringLiteral(require.resolve('./runtime')),
+            ]),
+            identifier(canonicalName.name)
+          ),
+          references: Map(),
+        })
       ),
     ];
   } else {
@@ -183,8 +200,7 @@ export async function bundleCanonicalName(
           }),
         });
 
-        const code = await generateCodeFromBundle(executionBundle);
-        const macroFunction: MacroFunction = eval(code);
+        const macroFunction: MacroFunction = executeBundle(executionBundle);
         macros = macros.set(reference[0], macroFunction);
         definition = definition.set(
           'references',
