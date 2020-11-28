@@ -33,19 +33,22 @@ import { runFile } from './index';
         ])
       )
     ) {
-      const errorMessage = match(err, {
-        DefinitionNotFoundInBundleError: ({ canonicalName }) =>
-          `Failed to find definition for ${JSON.stringify(
-            canonicalName.toJSON()
-          )}`,
-        DefinitionNotFoundInCanonicalDefinition: ({
-          reference,
-          canonicalName,
-        }) =>
-          `Failed to find a definition for the reference ${reference} in the body of ${JSON.stringify(
-            canonicalName.toJSON()
-          )}`,
-      });
+      const errorMessage =
+        err.type +
+        ' : ' +
+        match(err, {
+          DefinitionNotFoundInBundleError: ({ canonicalName }) =>
+            `Failed to find definition for ${JSON.stringify(
+              canonicalName.toJSON()
+            )}`,
+          DefinitionNotFoundInCanonicalDefinition: ({
+            reference,
+            canonicalName,
+          }) =>
+            `Failed to find a definition for the reference ${reference} in the body of ${JSON.stringify(
+              canonicalName.toJSON()
+            )}`,
+        });
       console.log(errorMessage);
     } else {
       console.log(err);
