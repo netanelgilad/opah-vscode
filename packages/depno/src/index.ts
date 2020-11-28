@@ -54,8 +54,6 @@ async function executeBundle(
     silent?: boolean;
   }
 ) {
-  // const bundleAfterMacros = await runMacrosInBundle(bundle);
-
   const mappedArgs = args.map(x => {
     if (x === '__stdin__') {
       return ((template`process.stdin`() as unknown) as types.ExpressionStatement)
@@ -82,7 +80,7 @@ async function executeBundle(
     }),
   });
 
-  const code = await generateCodeFromBundle(executionBundle);
+  const code = generateCodeFromBundle(executionBundle);
 
   const tmpFile = file({ extension: 'js' });
 

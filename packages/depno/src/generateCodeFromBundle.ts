@@ -14,7 +14,7 @@ import { Bundle, Definition, ExecutionBundle } from './Bundle';
 import { DefinitionNotFoundInBundleError } from './DefinitionNotFoundInBundleError';
 import { canonicalIdentifier, CanonicalName } from './fullyQualifiedIdentifier';
 
-export async function generateCodeFromBundle(bundle: ExecutionBundle) {
+export function generateCodeFromBundle(bundle: ExecutionBundle) {
   const [definitionsDeclarations] = getDeclarationsFromBundle(
     bundle.definitions,
     bundle.execute.references.valueSeq().toSet(),
@@ -43,9 +43,9 @@ export async function generateCodeFromBundle(bundle: ExecutionBundle) {
       .toArray()
   );
 
-  const { code } = (await generate(executionProgram, undefined, {
+  const { code } = generate(executionProgram, undefined, {
     filename: 'a.ts',
-  }))!;
+  })!;
 
   return code!;
 }
