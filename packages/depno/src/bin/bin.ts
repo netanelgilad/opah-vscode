@@ -57,7 +57,7 @@ import { EvalCodeOfBundleFailedError } from '../errors/EvalCodeOfBundleFailedErr
         });
       console.log(errorMessage);
     } else {
-      console.log(err);
+      console.log(err.stack || err);
     }
     process.exit(1);
   }
