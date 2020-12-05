@@ -10,15 +10,16 @@ import { filter } from 'async';
 import { Map } from 'immutable';
 import { fields, variant } from 'variant';
 import { assertExpression } from '../../assertExpression';
+import { assertIdentifier } from '../../assertIdentifier';
 import { CanonicalName } from '../../core';
-import { executeDefinitionInContext } from './executeDefinitionInContext';
-import { getOutOfScopeReferences } from './getOutOfScopeReferences';
-import { isMacroDefinition } from '../isMacroDefinition';
 import { Definition } from '../../Definition';
-import { MacroFunction } from './MacroFunction';
-import { getDefinitionForCanonicalName } from '../getDefinitionForCanonicalName';
-import { withCache } from '../withCache';
+import { executeDefinitionInContext } from '../../executeDefinitionInContext';
 import { LocalName } from '../../LocalName';
+import { getDefinitionForCanonicalName } from '../getDefinitionForCanonicalName';
+import { isMacroDefinition } from '../isMacroDefinition';
+import { withCache } from '../withCache';
+import { getOutOfScopeReferences } from './getOutOfScopeReferences';
+import { MacroFunction } from './MacroFunction';
 
 export async function processMacros(
   canonicalName: CanonicalName,
@@ -53,6 +54,8 @@ export async function processMacros(
 
   let tempProgram = program([expressionStatement(definition.expression)]);
 
+  const transformPromises: Promise<void>[] = [];
+
   traverse(file(tempProgram, undefined, undefined), {
     CallExpression: {
       exit(referencePath) {
@@ -62,44 +65,53 @@ export async function processMacros(
             definition.references.get(referencePath.node.callee.name)!
           )
         ) {
-          const macroLocalName = referencePath.node.callee.name;
-          const argsDefinitions = referencePath.node.arguments.map(
-            argExpression => {
-              assertExpression(argExpression);
+          transformPromises.push(
+            (async () => {
+              await Promise.all(transformPromises);
+              assertIdentifier(referencePath.node.callee);
 
-              const argReferences = getOutOfScopeReferences(
-                argExpression
-              ).reduce((result, reference) => {
-                if (definition.references.has(reference)) {
-                  result = result.set(
-                    reference,
-                    definition.references.get(reference)!
-                  );
+              const macroLocalName = referencePath.node.callee.name;
+              const argsDefinitions = referencePath.node.arguments.map(
+                argExpression => {
+                  assertExpression(argExpression);
+
+                  const argReferences = getOutOfScopeReferences(
+                    argExpression
+                  ).reduce((result, reference) => {
+                    if (definition.references.has(reference)) {
+                      result = result.set(
+                        reference,
+                        definition.references.get(reference)!
+                      );
+                    }
+                    return result;
+                  }, Map<LocalName, CanonicalName>());
+
+                  return Definition({
+                    expression: argExpression,
+                    references: argReferences,
+                  });
                 }
-                return result;
-              }, Map<LocalName, CanonicalName>());
+              );
 
-              return Definition({
-                expression: argExpression,
-                references: argReferences,
-              });
-            }
-          );
-
-          const replacement = macrosFunctions.get(
-            definition.references.get(referencePath.node.callee.name)!
-          )!(...argsDefinitions);
-          referencePath.replaceWith(replacement.expression);
-          definition = definition.set(
-            'references',
-            definition.references
-              .merge(replacement.references)
-              .remove(macroLocalName)
+              const replacement = await macrosFunctions.get(
+                definition.references.get(referencePath.node.callee.name)!
+              )!(...argsDefinitions);
+              referencePath.replaceWith(replacement.expression);
+              definition = definition.set(
+                'references',
+                definition.references
+                  .merge(replacement.references)
+                  .remove(macroLocalName)
+              );
+            })()
           );
         }
       },
     },
   });
+
+  await Promise.all(transformPromises);
 
   definition = definition.set(
     'expression',

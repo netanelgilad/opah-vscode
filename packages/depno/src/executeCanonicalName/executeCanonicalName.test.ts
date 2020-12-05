@@ -479,6 +479,51 @@ describe('executeCanonicalName', () => {
       );
     }
   );
+
+  statefulTest(`should execute async macros in order`, async function*() {
+    const tmpFilePath = yield* fixtureFile(
+      `
+				import {console} from "console";
+				import {createMacro, Definition} from "@depno/core";
+				import {Map} from "@depno/immutable";
+
+				const firstMacro = createMacro(async () => {
+					return Definition({
+						expression: {
+							type: 'NumericLiteral',
+							value: 1
+						},
+						references: Map()
+					})
+				})
+
+				const secondMacro = createMacro(async (nodeDefinition) => {
+					return Definition({
+						expression: {
+							type: 'BinaryExpression',
+							operator: '+',
+							left: {
+								type: 'NumericLiteral',
+								value: 2
+							},
+							right: nodeDefinition.expression
+						},
+						references: Map()
+					})
+				})
+
+      	export default function() {
+					console.log(secondMacro(firstMacro()));
+				}
+      `
+    );
+
+    const childProcess = await executeCanonicalName(
+      CanonicalName({ uri: tmpFilePath, name: 'default' })
+    );
+
+    await assertThat(childProcess, hasExitedSuccessfulyWith('3\n'));
+  });
 });
 
 const anyString = '.*';
