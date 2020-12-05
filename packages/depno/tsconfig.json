@@ -19,6 +19,6 @@
     "esModuleInterop": true,
 		"noEmitOnError": false
   },
-  "files": ["./src/index.ts", "./src/bin.ts"],
-  "include": ["src"]
+  "files": ["./src/bin/bin.ts"],
+  "include": ["src", "test"]
 }

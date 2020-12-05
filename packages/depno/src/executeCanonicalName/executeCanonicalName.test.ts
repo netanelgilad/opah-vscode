@@ -1,43 +1,19 @@
 import { directory } from 'tempy';
-import { runFile } from '../src/index';
+import { executeCanonicalName } from './executeCanonicalName';
 import { Chance } from 'chance';
 import { join } from 'path';
-import { statefulTest } from './statefulTest';
-import { fixtureFile, fixtureFolder } from './fixtureFile';
-import { staticFileServer } from './staticFileServer';
-import { collectStreamChunks } from './collectStreamChunks';
+import { statefulTest } from '../../test/statefulTest';
+import { fixtureFile, fixtureFolder } from '../../test/fixtureFile';
+import { staticFileServer } from '../../test/staticFileServer';
+import { collectStreamChunks } from '../../test/collectStreamChunks';
 import stripIndent from 'strip-indent';
-import { assertThat } from './assertThat';
-import { hasExitedSuccessfulyWith } from './assertions/hasExitedSuccessfulyWith';
-import Expect from 'expect';
-declare const expect: typeof Expect;
-declare const describe;
+import { assertThat } from '../../test/assertThat';
+import { hasExitedSuccessfulyWith } from '../../test/assertions/hasExitedSuccessfulyWith';
+import { CanonicalName } from '../CanonicalName';
 
 const chance = new Chance();
 
-describe('runFile', () => {
-  statefulTest(
-    'should run the default export from a typecript file',
-    async function*() {
-      const expectedStdout = chance.string();
-
-      const tmpFilePath = yield* fixtureFile(`
-				import {console} from "console";
-        export default () => {
-          const text: string = '${expectedStdout}';
-          console.log(text);
-        }
-      `);
-
-      const childProcess = await runFile(tmpFilePath);
-
-      await assertThat(
-        childProcess,
-        hasExitedSuccessfulyWith(expectedStdout + '\n')
-      );
-    }
-  );
-
+describe('executeCanonicalName', () => {
   statefulTest('should ignore types when bundling', async function*() {
     const expectedStdout = chance.string();
 
@@ -52,66 +28,15 @@ describe('runFile', () => {
         }
       `);
 
-    const childProcess = await runFile(tmpFilePath);
+    const childProcess = await executeCanonicalName(
+      CanonicalName({ uri: tmpFilePath, name: 'default' })
+    );
 
     await assertThat(
       childProcess,
       hasExitedSuccessfulyWith(expectedStdout + '\n')
     );
   });
-
-  statefulTest('should run a relative typecript file', async function*() {
-    const tmpDirectory = directory();
-    const expectedStdout = chance.string();
-
-    yield* fixtureFile(
-      `
-				import {console} from "console";
-        export default () => {
-          const text: string = '${expectedStdout}';
-          console.log(text);
-        }
-      `,
-      join(tmpDirectory, './fileToRun.ts')
-    );
-
-    const childProcess = await runFile('./fileToRun.ts', {
-      cwd: tmpDirectory,
-    });
-
-    await assertThat(
-      childProcess,
-      hasExitedSuccessfulyWith(expectedStdout + '\n')
-    );
-  });
-
-  statefulTest(
-    'should run the given const exported function from a file',
-    async function*() {
-      const expectedStdout = chance.string();
-      const exportedFunctionName = chance.string({ pool: 'abcdef' });
-
-      const tmpFilePath = yield* fixtureFile(
-        `
-				import {console} from "console";
-      	export const ${exportedFunctionName} = () => {
-					const text: string = '${expectedStdout}';
-					console.log(text);
-				}
-      `
-      );
-
-      const childProcess = await runFile(tmpFilePath, {
-        exportedFunctionName,
-        args: [],
-      });
-
-      await assertThat(
-        childProcess,
-        hasExitedSuccessfulyWith(expectedStdout + '\n')
-      );
-    }
-  );
 
   statefulTest(
     'should run the given exported function from a file',
@@ -129,10 +54,9 @@ describe('runFile', () => {
       `
       );
 
-      const childProcess = await runFile(tmpFilePath, {
-        exportedFunctionName,
-        args: [],
-      });
+      const childProcess = await executeCanonicalName(
+        CanonicalName({ uri: tmpFilePath, name: exportedFunctionName })
+      );
 
       await assertThat(
         childProcess,
@@ -156,10 +80,13 @@ describe('runFile', () => {
     `
       );
 
-      const childProcess = await runFile(tmpFilePath, {
-        exportedFunctionName,
-        args: [expectedStdout],
-      });
+      const childProcess = await executeCanonicalName(
+        CanonicalName({ uri: tmpFilePath, name: exportedFunctionName }),
+        [expectedStdout],
+        {
+          silent: true,
+        }
+      );
 
       await assertThat(
         childProcess,
@@ -196,7 +123,9 @@ describe('runFile', () => {
           join(tmpDirectory, 'dependency.ts')
         );
 
-        const childProcess = await runFile(dependantFilePath);
+        const childProcess = await executeCanonicalName(
+          CanonicalName({ uri: dependantFilePath, name: 'default' })
+        );
 
         await assertThat(
           childProcess,
@@ -235,7 +164,9 @@ describe('runFile', () => {
           join(tmpDirectory, 'dependency.ts')
         );
 
-        const childProcess = await runFile(dependantFilePath);
+        const childProcess = await executeCanonicalName(
+          CanonicalName({ uri: dependantFilePath, name: 'default' })
+        );
 
         await assertThat(
           childProcess,
@@ -271,7 +202,9 @@ describe('runFile', () => {
           join(tmpDirectory, 'dependency.ts')
         );
 
-        const childProcess = await runFile(dependantFilePath);
+        const childProcess = await executeCanonicalName(
+          CanonicalName({ uri: dependantFilePath, name: 'default' })
+        );
 
         await assertThat(
           childProcess,
@@ -307,7 +240,9 @@ describe('runFile', () => {
         `
           );
 
-          const childProcess = await runFile(tmpFilePath);
+          const childProcess = await executeCanonicalName(
+            CanonicalName({ uri: tmpFilePath, name: 'default' })
+          );
 
           await assertThat(
             childProcess,
@@ -337,8 +272,13 @@ describe('runFile', () => {
             `,
           });
 
-          const childProcess = await runFile(
-            `http://localhost:${(httpServerAddress! as any).port}/index.ts`
+          const childProcess = await executeCanonicalName(
+            CanonicalName({
+              uri: `http://localhost:${
+                (httpServerAddress! as any).port
+              }/index.ts`,
+              name: 'default',
+            })
           );
 
           await assertThat(
@@ -371,7 +311,9 @@ describe('runFile', () => {
         }
       `);
 
-    const childProcess = await runFile(tmpFilePath);
+    const childProcess = await executeCanonicalName(
+      CanonicalName({ uri: tmpFilePath, name: 'default' })
+    );
 
     await assertThat(
       childProcess,
@@ -404,7 +346,9 @@ describe('runFile', () => {
 					`,
         });
 
-        const childProcess = await runFile(join(tmpFolder, 'bar.ts'));
+        const childProcess = await executeCanonicalName(
+          CanonicalName({ uri: join(tmpFolder, 'bar.ts'), name: 'default' })
+        );
 
         await assertThat(childProcess, hasExitedSuccessfulyWith(`1\n2\n`));
       }
@@ -430,7 +374,9 @@ describe('runFile', () => {
 					`,
         });
 
-        const childProcess = await runFile(join(tmpFolder, 'baz.ts'));
+        const childProcess = await executeCanonicalName(
+          CanonicalName({ uri: join(tmpFolder, 'baz.ts'), name: 'default' })
+        );
 
         await assertThat(childProcess, hasExitedSuccessfulyWith(`foo\nbaz\n`));
       }
@@ -449,7 +395,9 @@ describe('runFile', () => {
         }
       `);
 
-        const childProcess = await runFile(tmpFilePath);
+        const childProcess = await executeCanonicalName(
+          CanonicalName({ uri: tmpFilePath, name: 'default' })
+        );
 
         await assertThat(childProcess, hasExitedSuccessfulyWith(`true\n`));
       }
@@ -464,7 +412,9 @@ describe('runFile', () => {
         }
       `);
 
-      const childProcess = await runFile(tmpFilePath);
+      const childProcess = await executeCanonicalName(
+        CanonicalName({ uri: tmpFilePath, name: 'default' })
+      );
 
       await assertThat(childProcess, hasExitedSuccessfulyWith(`true\n`));
     });
@@ -485,7 +435,9 @@ describe('runFile', () => {
 					}
 				`);
 
-        const childProcess = await runFile(tmpFilePath);
+        const childProcess = await executeCanonicalName(
+          CanonicalName({ uri: tmpFilePath, name: 'default' })
+        );
 
         await assertThat(
           childProcess,
@@ -505,7 +457,9 @@ describe('runFile', () => {
         }
       `);
 
-      const childProcess = await runFile(tmpFilePath);
+      const childProcess = await executeCanonicalName(
+        CanonicalName({ uri: tmpFilePath, name: 'default' })
+      );
 
       expect(childProcess.stdout).toBeDefined();
       let stdout = await collectStreamChunks(childProcess.stdout!);

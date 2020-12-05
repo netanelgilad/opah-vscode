@@ -1,5 +1,5 @@
 import { variant, fields } from 'variant';
-import { CanonicalName } from './fullyQualifiedIdentifier';
+import { CanonicalName } from '../CanonicalName';
 
 export const DefinitionNotFoundInCanonicalDefinitionError = variant(
   'DefinitionNotFoundInCanonicalDefinition',

@@ -9,15 +9,19 @@ import {
   variableDeclaration,
   variableDeclarator,
 } from '@babel/types';
-import { List, Set } from 'immutable';
-import { Bundle, Definition, ExecutionBundle } from './Bundle';
-import { DefinitionNotFoundInBundleError } from './DefinitionNotFoundInBundleError';
-import { canonicalIdentifier, CanonicalName } from './fullyQualifiedIdentifier';
+import { List, Map, Set } from 'immutable';
+import { CanonicalName } from '../CanonicalName';
+import { Definition } from '../Definition';
+import { DefinitionNotFoundInBundleError } from '../errors/DefinitionNotFoundInBundleError';
+import { canonicalIdentifier } from '../canonicalIdentifier';
 
-export function generateCodeFromBundle(bundle: ExecutionBundle) {
+export function generateCodeFromBundle(
+  definitions: Map<CanonicalName, Definition>,
+  execute: Definition
+) {
   const [definitionsDeclarations] = getDeclarationsFromBundle(
-    bundle.definitions,
-    bundle.execute.references.valueSeq().toSet(),
+    definitions,
+    execute.references.valueSeq().toSet(),
     Set()
   );
   const executionProgram = program(
@@ -26,13 +30,13 @@ export function generateCodeFromBundle(bundle: ExecutionBundle) {
         expressionStatement(
           callExpression(
             arrowFunctionExpression(
-              bundle.execute.references
+              execute.references
                 .keySeq()
                 .map(reference => identifier(reference))
                 .toArray(),
-              bundle.execute.expression
+              execute.expression
             ),
-            bundle.execute.references
+            execute.references
               .valueSeq()
               .map(canonicalIdentifier)
               .map(x => identifier(x))
@@ -51,7 +55,7 @@ export function generateCodeFromBundle(bundle: ExecutionBundle) {
 }
 
 function getDeclarationsFromBundle(
-  bundle: Bundle,
+  definitions: Map<CanonicalName, Definition>,
   canonicalNames: Set<CanonicalName>,
   seenDeclarations: Set<CanonicalName>
 ): [List<Statement>, Set<CanonicalName>] {
@@ -61,16 +65,16 @@ function getDeclarationsFromBundle(
         return [result, seenDeclarations];
       }
 
-      const definition = bundle.get(canonicalName);
+      const definition = definitions.get(canonicalName);
       if (!definition) {
-        throw DefinitionNotFoundInBundleError({ canonicalName, bundle });
+        throw DefinitionNotFoundInBundleError({ canonicalName, definitions });
       }
 
       const [
         referencesDeclarations,
         updatedSeenDeclarations,
       ] = getDeclarationsFromBundle(
-        bundle,
+        definitions,
         definition.references
           .valueSeq()
           .toSet()

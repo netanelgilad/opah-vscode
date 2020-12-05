@@ -5,7 +5,7 @@ import {
   isClassDeclaration,
   isExportDefaultDeclaration,
 } from '@babel/types';
-import { ReferencedDefinitionNode } from './Bundle';
+import { ReferencedDefinitionNode } from './ReferencedDefinitionNode';
 
 export function isReferencedDefinitionNode(
   node: Node

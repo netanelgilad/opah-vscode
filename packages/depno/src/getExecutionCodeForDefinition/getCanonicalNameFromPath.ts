@@ -9,7 +9,7 @@ import {
   Node,
 } from '@babel/types';
 import { unimplemented } from '@deaven/unimplemented';
-import { CanonicalName } from './fullyQualifiedIdentifier';
+import { CanonicalName } from '../CanonicalName';
 import { isReferencedDefinitionNode } from './isReferencedDefinitionNode';
 import { resolveURIFromDependency } from './resolveURIFromDependency';
 
