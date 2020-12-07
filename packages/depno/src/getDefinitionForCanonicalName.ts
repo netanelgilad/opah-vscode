@@ -5,11 +5,11 @@ import {
   stringLiteral,
 } from '@babel/types';
 import { Map } from 'immutable';
-import { CanonicalName } from '../CanonicalName';
-import { Definition } from '../Definition';
-import { nodeModules } from './nodeModules';
-import { getDefinitionFromExternalURI } from './getDefinitionFromExternalURI';
-import { withCache } from './withCache';
+import { CanonicalName } from './CanonicalName';
+import { Definition } from './Definition';
+import { nodeModules } from './getExecutionCodeForDefinition/nodeModules';
+import { getDefinitionFromExternalURI } from './getExecutionCodeForDefinition/getDefinitionFromExternalURI';
+import { withCache } from './getExecutionCodeForDefinition/withCache';
 
 export const getDefinitionForCanonicalName = withCache(
   async (canonicalName: CanonicalName) => {
@@ -32,7 +32,7 @@ export const getDefinitionForCanonicalName = withCache(
       return Definition({
         expression: memberExpression(
           callExpression(identifier('require'), [
-            stringLiteral(require.resolve('../core')),
+            stringLiteral(require.resolve('./core')),
           ]),
           identifier(canonicalName.name)
         ),

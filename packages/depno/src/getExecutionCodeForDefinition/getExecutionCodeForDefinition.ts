@@ -1,5 +1,5 @@
 import { Map } from 'immutable';
-import { getDefinitionForCanonicalName } from './getDefinitionForCanonicalName';
+import { getDefinitionForCanonicalName } from '../getDefinitionForCanonicalName';
 import { CanonicalName } from '../core';
 import { Definition } from '../Definition';
 import { generateCodeFromBundle } from './generateCodeFromBundle';
