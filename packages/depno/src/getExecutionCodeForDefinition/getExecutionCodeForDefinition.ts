@@ -14,18 +14,22 @@ export async function getExecutionCodeForDefinition(definition: Definition) {
     if (!reference) {
       throw new Error('ImpossibleState');
     }
-    const definitionOfReference = await getDefinitionForCanonicalName(
-      reference
-    );
-    if (!isMacroDefinition(definitionOfReference)) {
-      const updatedDefinition = await processMacros(
-        reference,
-        definitionOfReference
+    if (!definitions.has(reference)) {
+      const definitionOfReference = await getDefinitionForCanonicalName(
+        reference
       );
-      definitions = definitions.set(reference, updatedDefinition);
-      references = references.merge(
-        updatedDefinition.references.valueSeq().toSet()
-      );
+      if (!isMacroDefinition(definitionOfReference)) {
+        const [updatedDefinition, artificialDefinitions] = await processMacros(
+          reference,
+          definitionOfReference
+        );
+        definitions = definitions
+          .merge(artificialDefinitions)
+          .set(reference, updatedDefinition);
+        references = references.merge(
+          updatedDefinition.references.valueSeq().toSet()
+        );
+      }
     }
 
     references = references.remove(reference);

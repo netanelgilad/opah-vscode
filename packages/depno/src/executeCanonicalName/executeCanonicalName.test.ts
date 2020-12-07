@@ -524,6 +524,52 @@ describe('executeCanonicalName', () => {
 
     await assertThat(childProcess, hasExitedSuccessfulyWith('3\n'));
   });
+
+  statefulTest(
+    `should execute macros that return artificial definitions`,
+    async function*() {
+      const tmpFilePath = yield* fixtureFile(
+        `
+				import {console} from "console";
+				import {createMacro, Definition, CanonicalName} from "@depno/core";
+				import {Map} from "@depno/immutable";
+
+				const aMacro = createMacro(async () => {
+					return [
+						Definition({
+							expression: { type: 'Identifier', name: 'ref' },
+							references: Map([
+								['ref', CanonicalName({ uri: 'artificial', name: 'definition' })],
+							]),
+						}),
+						Map([
+							[
+								CanonicalName({ uri: 'artificial', name: 'definition' }),
+								Definition({
+									expression: {
+										type: 'NumericLiteral',
+										value: 1,
+									},
+									references: Map(),
+								}),
+							],
+						]),
+					];
+				});
+
+      	export default function() {
+					console.log(aMacro());
+				}
+      `
+      );
+
+      const childProcess = await executeCanonicalName(
+        CanonicalName({ uri: tmpFilePath, name: 'default' })
+      );
+
+      await assertThat(childProcess, hasExitedSuccessfulyWith('1\n'));
+    }
+  );
 });
 
 const anyString = '.*';

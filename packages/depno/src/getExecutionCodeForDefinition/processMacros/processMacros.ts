@@ -14,8 +14,8 @@ import { assertIdentifier } from '../../assertIdentifier';
 import { CanonicalName } from '../../core';
 import { Definition } from '../../Definition';
 import { executeDefinitionInContext } from '../../executeDefinitionInContext';
+import { getDefinitionForCanonicalName } from '../../getDefinitionForCanonicalName';
 import { LocalName } from '../../LocalName';
-import { getDefinitionForCanonicalName } from '../getDefinitionForCanonicalName';
 import { isMacroDefinition } from '../isMacroDefinition';
 import { withCache } from '../withCache';
 import { getOutOfScopeReferences } from './getOutOfScopeReferences';
@@ -24,10 +24,11 @@ import { MacroFunction } from './MacroFunction';
 export async function processMacros(
   canonicalName: CanonicalName,
   definition: Definition
-): Promise<Definition> {
+): Promise<[Definition, Map<CanonicalName, Definition>]> {
+  let artificialDefinitions = Map<CanonicalName, Definition>();
   const macros = await filter(
-    definition.references.values(),
-    async referenceCanonicalName =>
+    definition.references.entries(),
+    async ([, referenceCanonicalName]) =>
       !referenceCanonicalName.equals(canonicalName) &&
       !referenceCanonicalName.equals(
         CanonicalName({
@@ -43,7 +44,7 @@ export async function processMacros(
   const macrosFunctions = Map(
     await Promise.all(
       macros.map(
-        async macro =>
+        async ([, macro]) =>
           [macro, await getMacroFunction(macro)] as [
             CanonicalName,
             MacroFunction
@@ -70,7 +71,6 @@ export async function processMacros(
               await Promise.all(transformPromises);
               assertIdentifier(referencePath.node.callee);
 
-              const macroLocalName = referencePath.node.callee.name;
               const argsDefinitions = referencePath.node.arguments.map(
                 argExpression => {
                   assertExpression(argExpression);
@@ -94,15 +94,21 @@ export async function processMacros(
                 }
               );
 
-              const replacement = await macrosFunctions.get(
+              let replacement = await macrosFunctions.get(
                 definition.references.get(referencePath.node.callee.name)!
               )!(...argsDefinitions);
+
+              if (Array.isArray(replacement)) {
+                artificialDefinitions = artificialDefinitions.merge(
+                  replacement[1]
+                );
+                replacement = replacement[0];
+              }
+
               referencePath.replaceWith(replacement.expression);
               definition = definition.set(
                 'references',
-                definition.references
-                  .merge(replacement.references)
-                  .remove(macroLocalName)
+                definition.references.merge(replacement.references)
               );
             })()
           );
@@ -117,8 +123,12 @@ export async function processMacros(
     'expression',
     (tempProgram.body[0] as ExpressionStatement).expression
   );
+  definition = definition.set(
+    'references',
+    definition.references.removeAll(macros.map(x => x[0]))
+  );
 
-  return definition;
+  return [definition, artificialDefinitions];
 }
 
 const NonMacroDefinitionError = variant(
