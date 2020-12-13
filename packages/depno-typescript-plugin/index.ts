@@ -1,12 +1,12 @@
-import { join, resolve } from "path";
-import { readdirSync } from "fs";
+import { dirname, join } from "path";
 import merge = require("merge-deep");
-import flatMap from "lodash.flatmap";
 
 function init(modules: {
   typescript: typeof import("typescript/lib/tsserverlibrary");
 }) {
   const ts = modules.typescript;
+
+  const nodeTypesPath = dirname(require.resolve("@types/node/package.json"));
 
   const OPTIONS: ts.CompilerOptions = {
     esModuleInterop: true,
@@ -32,7 +32,11 @@ function init(modules: {
     noEmitHelpers: OPTIONS.noEmitHelpers,
     target: ts.ScriptTarget.ESNext,
     typeRoots: [],
-    types: [resolve(__dirname, "builtin-modules")],
+    types: [
+      join(__dirname, "depno-immutable"),
+      nodeTypesPath,
+      join(__dirname, "depno-core"),
+    ],
     lib: ["lib.esnext.d.ts"],
   };
 
@@ -53,23 +57,6 @@ function init(modules: {
       return info.languageService;
     }
 
-    let buildInModules = flatMap(
-      readdirSync(resolve(__dirname, "./builtin-modules"), {
-        withFileTypes: true,
-      }),
-      (entry) => {
-        if (entry.isDirectory()) {
-          return readdirSync(
-            join(resolve(__dirname, "./builtin-modules"), entry.name)
-          )
-            .map((file) => `${entry.name}/${file}`)
-            .map((x) => x.substr(0, x.length - 5));
-        } else {
-          return entry.name.substr(0, entry.name.length - 5);
-        }
-      }
-    );
-
     info.languageServiceHost.resolveModuleNames = (
       moduleNames: string[],
       containingFile: string,
@@ -77,12 +64,9 @@ function init(modules: {
       _redirectedReference?: ts.ResolvedProjectReference,
       options: ts.CompilerOptions = OPTIONS
     ) => {
-      moduleNames = moduleNames.map((moduleName) => {
-        if (buildInModules.includes(moduleName)) {
-          return resolve(__dirname, `./builtin-modules/${moduleName}`);
-        }
-        return stripExtNameDotTs(moduleName);
-      });
+      moduleNames = moduleNames.map((moduleName) =>
+        stripExtNameDotTs(moduleName)
+      );
 
       return resolveModuleNames.call(
         info.languageServiceHost,

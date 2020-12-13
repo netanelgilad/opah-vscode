@@ -1,6 +1,6 @@
 {
   "name": "depno-typescript-plugin",
-  "version": "0.0.127",
+  "version": "0.0.153",
   "main": "index.js",
   "author": "Netanel Gilad",
   "license": "MIT",
@@ -10,11 +10,12 @@
   "devDependencies": {
     "@types/lodash.flatmap": "^4.5.6",
     "@types/merge-deep": "^3.0.0",
-    "@types/node": "^13.13.4",
     "@types/recursive-readdir": "^2.2.0",
     "typescript": "^3.8.3"
   },
   "dependencies": {
+    "@types/node": "^13.13.4",
+    "depno": "^0.1.6",
     "lodash.flatmap": "^4.5.0",
     "merge-deep": "^3.0.2"
   }

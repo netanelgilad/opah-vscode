@@ -19,7 +19,7 @@ import { LocalName } from '../../LocalName';
 import { isMacroDefinition } from '../isMacroDefinition';
 import { withCache } from '../withCache';
 import { getOutOfScopeReferences } from './getOutOfScopeReferences';
-import { MacroFunction } from './MacroFunction';
+import { MacroFunction } from '../../MacroFunction';
 
 export async function processMacros(
   canonicalName: CanonicalName,

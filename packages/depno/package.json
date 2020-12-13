@@ -1,7 +1,6 @@
 {
   "name": "depno",
-  "version": "0.1.0",
-  "private": true,
+  "version": "0.1.6",
   "repository": "git@github.com:netanelgilad/depno.git",
   "author": "Netanel Gilad <netanelgilad@gmail.com>",
   "license": "MIT",
@@ -12,7 +11,8 @@
     "build:docker": "docker build . -t netanelgilad/depno:`git rev-parse HEAD`",
     "publish:docker": "docker push netanelgilad/depno:`git rev-parse HEAD`",
     "tag:docker": "docker tag netanelgilad/depno:`git rev-parse HEAD` netanelgilad/depno:latest && docker push netanelgilad/depno:latest",
-    "test": "jest --config=jest.config.ts"
+    "test": "jest --config=jest.config.ts",
+    "prepublishOnly": "yarn build:ts"
   },
   "pkg": {
     "assets": [
