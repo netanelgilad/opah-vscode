@@ -6,5 +6,10 @@
 		"**/CVS": true,
 		"**/.DS_Store": true,
 		"packages/depno/**/*.js": true
-	}
+	},
+    "workbench.colorCustomizations": {
+        "activityBar.background": "#073603",
+        "titleBar.activeBackground": "#0A4C04",
+        "titleBar.activeForeground": "#F1FEF0"
+    }
 }
