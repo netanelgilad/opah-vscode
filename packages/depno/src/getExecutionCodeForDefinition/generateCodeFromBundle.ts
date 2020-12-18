@@ -1,7 +1,5 @@
 import generate from '@babel/generator';
 import {
-  arrowFunctionExpression,
-  callExpression,
   expressionStatement,
   identifier,
   program,
@@ -10,10 +8,11 @@ import {
   variableDeclarator,
 } from '@babel/types';
 import { List, Map, Set } from 'immutable';
+import { canonicalIdentifier } from '../canonicalIdentifier';
 import { CanonicalName } from '../CanonicalName';
 import { Definition } from '../Definition';
 import { DefinitionNotFoundInBundleError } from '../errors/DefinitionNotFoundInBundleError';
-import { canonicalIdentifier } from '../canonicalIdentifier';
+import { wrapDefinitionWithIIFE } from './wrapDefinitionWithIIFE';
 
 export function generateCodeFromBundle(
   definitions: Map<CanonicalName, Definition>,
@@ -26,24 +25,7 @@ export function generateCodeFromBundle(
   );
   const executionProgram = program(
     definitionsDeclarations
-      .push(
-        expressionStatement(
-          callExpression(
-            arrowFunctionExpression(
-              execute.references
-                .keySeq()
-                .map(reference => identifier(reference))
-                .toArray(),
-              execute.expression
-            ),
-            execute.references
-              .valueSeq()
-              .map(canonicalIdentifier)
-              .map(x => identifier(x))
-              .toArray()
-          )
-        )
-      )
+      .push(expressionStatement(wrapDefinitionWithIIFE(execute)))
       .toArray()
   );
 
@@ -98,20 +80,7 @@ function declarationOfDefinition(
   return variableDeclaration('var', [
     variableDeclarator(
       identifier(canonicalIdentifier(canonicalName)),
-      callExpression(
-        arrowFunctionExpression(
-          definition.references
-            .keySeq()
-            .map(reference => identifier(reference))
-            .toArray(),
-          definition.expression
-        ),
-        definition.references
-          .valueSeq()
-          .map(canonicalIdentifier)
-          .map(x => identifier(x))
-          .toArray()
-      )
+      wrapDefinitionWithIIFE(definition)
     ),
   ]) as Statement;
 }

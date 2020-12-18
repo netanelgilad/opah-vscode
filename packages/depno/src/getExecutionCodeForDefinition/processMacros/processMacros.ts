@@ -11,15 +11,17 @@ import { Map } from 'immutable';
 import { fields, variant } from 'variant';
 import { assertExpression } from '../../assertExpression';
 import { assertIdentifier } from '../../assertIdentifier';
+import { canonicalIdentifier } from '../../canonicalIdentifier';
 import { CanonicalName } from '../../core';
 import { Definition } from '../../Definition';
 import { executeDefinitionInContext } from '../../executeDefinitionInContext';
 import { getDefinitionForCanonicalName } from '../../getDefinitionForCanonicalName';
 import { LocalName } from '../../LocalName';
+import { MacroFunction } from '../../MacroFunction';
 import { isMacroDefinition } from '../isMacroDefinition';
 import { withCache } from '../withCache';
+import { wrapDefinitionWithIIFE } from '../wrapDefinitionWithIIFE';
 import { getOutOfScopeReferences } from './getOutOfScopeReferences';
-import { MacroFunction } from '../../MacroFunction';
 
 export async function processMacros(
   canonicalName: CanonicalName,
@@ -105,10 +107,37 @@ export async function processMacros(
                 replacement = replacement[0];
               }
 
-              referencePath.replaceWith(replacement.expression);
+              const conflicts = replacement.references.filter(
+                (canonicalName, localName) =>
+                  definition.references.has(localName) &&
+                  !definition.references.get(localName)!.equals(canonicalName)
+              );
+
+              let referencesToMerge = replacement.references;
+
+              if (conflicts.size > 0) {
+                referencePath.replaceWith(
+                  wrapDefinitionWithIIFE(
+                    Definition({
+                      expression: replacement.expression,
+                      references: conflicts,
+                    })
+                  )
+                );
+                referencesToMerge = replacement.references.mapEntries(([localName, canonicalName]) => {
+                  if (conflicts.has(localName)) {
+                    return [canonicalIdentifier(canonicalName), canonicalName]
+                  } else {
+                    return [localName, canonicalName]
+                  }
+                });
+              } else {
+                referencePath.replaceWith(replacement.expression);
+              }
+
               definition = definition.set(
                 'references',
-                definition.references.merge(replacement.references)
+                definition.references.merge(referencesToMerge)
               );
             })()
           );

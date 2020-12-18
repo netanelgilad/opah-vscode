@@ -1,7 +1,7 @@
 import { Map } from 'immutable';
-import { getDefinitionForCanonicalName } from '../getDefinitionForCanonicalName';
 import { CanonicalName } from '../core';
 import { Definition } from '../Definition';
+import { getDefinitionForCanonicalName } from '../getDefinitionForCanonicalName';
 import { generateCodeFromBundle } from './generateCodeFromBundle';
 import { isMacroDefinition } from './isMacroDefinition';
 import { processMacros } from './processMacros/processMacros';
