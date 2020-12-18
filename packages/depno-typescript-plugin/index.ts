@@ -7,6 +7,14 @@ function init(modules: {
   const ts = modules.typescript;
 
   const nodeTypesPath = dirname(require.resolve("@types/node/package.json"));
+  const immutableTypesPath = join(
+    dirname(require.resolve("immutable/package.json")),
+    "dist/immutable-nonambient.d"
+  );
+  const immutableJSPath = join(
+    dirname(require.resolve("immutable/package.json")),
+    "dist/immutable.js"
+  );
 
   const OPTIONS: ts.CompilerOptions = {
     esModuleInterop: true,
@@ -32,11 +40,7 @@ function init(modules: {
     noEmitHelpers: OPTIONS.noEmitHelpers,
     target: ts.ScriptTarget.ESNext,
     typeRoots: [],
-    types: [
-      join(__dirname, "depno-immutable"),
-      nodeTypesPath,
-      join(__dirname, "depno-core"),
-    ],
+    types: [nodeTypesPath, join(__dirname, "depno-core")],
     lib: ["lib.esnext.d.ts"],
   };
 
@@ -65,7 +69,9 @@ function init(modules: {
       options: ts.CompilerOptions = OPTIONS
     ) => {
       moduleNames = moduleNames.map((moduleName) =>
-        stripExtNameDotTs(moduleName)
+        ["@depno/immutable", "immutable", immutableJSPath].includes(moduleName)
+          ? immutableTypesPath
+          : stripExtNameDotTs(moduleName)
       );
 
       return resolveModuleNames.call(
