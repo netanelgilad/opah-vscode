@@ -7,13 +7,13 @@ import {
 import { Map } from 'immutable';
 import { CanonicalName } from './CanonicalName';
 import { Definition } from './Definition';
-import { nodeModules } from './getExecutionCodeForDefinition/nodeModules';
+import { builtinModules } from 'module';
 import { getDefinitionFromExternalURI } from './getExecutionCodeForDefinition/getDefinitionFromExternalURI';
 import { withCache } from './getExecutionCodeForDefinition/withCache';
 
 export const getDefinitionForCanonicalName = withCache(
   async (canonicalName: CanonicalName) => {
-    if (nodeModules.includes(canonicalName.uri)) {
+    if (builtinModules.includes(canonicalName.uri)) {
       return Definition({
         expression: memberExpression(
           callExpression(identifier('require'), [
