@@ -4,14 +4,15 @@ import {
   ImportDefaultSpecifier,
   ImportSpecifier,
   isExportDefaultDeclaration,
+
   isImportDefaultSpecifier,
   isImportSpecifier,
-  Node,
+  Node
 } from '@babel/types';
 import { unimplemented } from '@deaven/unimplemented';
 import { CanonicalName } from '../CanonicalName';
-import { isReferencedDefinitionNode } from './isReferencedDefinitionNode';
-import { resolveURIFromDependency } from './resolveURIFromDependency';
+import { isReferencedDefinitionNode } from '../isReferencedDefinitionNode';
+import { resolveURIFromDependency } from '../resolveURIFromDependency';
 
 export function getCanonicalNameFromPath(
   path: NodePath,
@@ -30,7 +31,7 @@ export function getCanonicalNameFromPath(
       uri: uri,
       name: isExportDefaultDeclaration(path.node)
         ? 'default'
-        : path.node.id.name,
+        :  path.node.id.name,
     });
   } else {
     return unimplemented();

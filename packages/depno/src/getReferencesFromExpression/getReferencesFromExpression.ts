@@ -5,8 +5,8 @@ import { CanonicalName } from '../core';
 import { getCanonicalNameFromPath } from './getCanonicalNameFromPath';
 import { globals } from './globals';
 import { LocalName } from '../LocalName';
-import { DefinitionNotFoundError } from './DefinitionNotFoundError';
-import { getOutOfScopeReferences } from './processMacros/getOutOfScopeReferences';
+import { DefinitionNotFoundError } from '../DefinitionNotFoundError';
+import { getOutOfScopeReferences } from '../getOutOfScopeReferences';
 
 export function getReferencesFromExpression(
   expression: Expression,

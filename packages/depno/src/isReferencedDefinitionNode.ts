@@ -1,11 +1,8 @@
 import {
-  Node,
-  isVariableDeclarator,
-  isFunctionDeclaration,
   isClassDeclaration,
-  isExportDefaultDeclaration,
+  isExportDefaultDeclaration, isFunctionDeclaration, isVariableDeclarator, Node
 } from '@babel/types';
-import { ReferencedDefinitionNode } from './ReferencedDefinitionNode';
+import { ReferencedDefinitionNode } from './getExecutionCodeForDefinition/ReferencedDefinitionNode';
 
 export function isReferencedDefinitionNode(
   node: Node

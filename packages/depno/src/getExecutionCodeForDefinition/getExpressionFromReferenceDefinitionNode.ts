@@ -1,15 +1,15 @@
 import {
-  Expression,
-  isVariableDeclarator,
-  isFunctionDeclaration,
+  classExpression, Expression,
+
+
   functionExpression,
   isClassDeclaration,
-  classExpression,
+
   isExportDefaultDeclaration,
-  isExpression,
+  isExpression, isFunctionDeclaration, isVariableDeclarator
 } from '@babel/types';
+import { isReferencedDefinitionNode } from '../isReferencedDefinitionNode';
 import { ReferencedDefinitionNode } from './ReferencedDefinitionNode';
-import { isReferencedDefinitionNode } from './isReferencedDefinitionNode';
 
 class NodeWithoutInitError extends Error {}
 class ExportDefaultNonReferencedDefinitionNode extends Error {

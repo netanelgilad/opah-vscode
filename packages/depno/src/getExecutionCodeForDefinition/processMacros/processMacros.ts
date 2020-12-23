@@ -21,7 +21,7 @@ import { MacroFunction } from '../../MacroFunction';
 import { isMacroDefinition } from '../isMacroDefinition';
 import { withCache } from '../withCache';
 import { wrapDefinitionWithIIFE } from '../wrapDefinitionWithIIFE';
-import { getOutOfScopeReferences } from './getOutOfScopeReferences';
+import { getOutOfScopeReferences } from '../../getOutOfScopeReferences';
 
 export async function processMacros(
   canonicalName: CanonicalName,

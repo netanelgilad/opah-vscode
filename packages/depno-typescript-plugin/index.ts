@@ -40,7 +40,7 @@ function init(modules: {
     noEmitHelpers: OPTIONS.noEmitHelpers,
     target: ts.ScriptTarget.ESNext,
     typeRoots: [],
-    types: [nodeTypesPath, join(__dirname, "depno-core")],
+    types: [nodeTypesPath, join(__dirname, "depno-core"), join(__dirname, "depno-host")],
     lib: ["lib.esnext.d.ts"],
   };
 

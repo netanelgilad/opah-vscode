@@ -7,7 +7,7 @@ import {
   isIdentifier,
 } from '@babel/types';
 import { Set } from 'immutable';
-import { LocalName } from '../../LocalName';
+import { LocalName } from './LocalName';
 
 export function getOutOfScopeReferences(expression: Expression) {
   if (isIdentifier(expression)) {

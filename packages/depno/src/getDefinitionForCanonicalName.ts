@@ -38,6 +38,16 @@ export const getDefinitionForCanonicalName = withCache(
         ),
         references: Map(),
       });
+    } else if (canonicalName.uri === '@depno/host') {
+      return Definition({
+        expression: memberExpression(
+          callExpression(identifier('require'), [
+            stringLiteral(require.resolve('./host')),
+          ]),
+          identifier(canonicalName.name)
+        ),
+        references: Map(),
+      });
     } else if (canonicalName.uri === '@depno/immutable') {
       return Definition({
         expression: memberExpression(
