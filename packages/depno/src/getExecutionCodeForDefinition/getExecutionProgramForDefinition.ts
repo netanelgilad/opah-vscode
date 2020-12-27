@@ -2,11 +2,11 @@ import { Map } from 'immutable';
 import { CanonicalName } from '../core';
 import { Definition } from '../Definition';
 import { getDefinitionForCanonicalName } from '../getDefinitionForCanonicalName';
-import { generateCodeFromBundle } from './generateCodeFromBundle';
+import { getProgramFromBundle } from './generateCodeFromBundle';
 import { isMacroDefinition } from './isMacroDefinition';
 import { processMacros } from './processMacros/processMacros';
 
-export async function getExecutionCodeForDefinition(definition: Definition) {
+export async function getExecutionProgramForDefinition(definition: Definition) {
   let definitions = Map<CanonicalName, Definition>();
   let references = definition.references.valueSeq().toSet();
   while (references.size > 0) {
@@ -35,7 +35,5 @@ export async function getExecutionCodeForDefinition(definition: Definition) {
     references = references.remove(reference);
   }
 
-  const code = generateCodeFromBundle(definitions, definition);
-
-  return code;
+  return getProgramFromBundle(definitions, definition);
 }

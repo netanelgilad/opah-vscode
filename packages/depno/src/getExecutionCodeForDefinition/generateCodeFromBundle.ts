@@ -1,20 +1,23 @@
-import generate from '@babel/generator';
 import {
   expressionStatement,
   identifier,
+  importDeclaration,
+  importSpecifier,
   program,
   Statement,
+  stringLiteral,
   variableDeclaration,
-  variableDeclarator,
+  variableDeclarator
 } from '@babel/types';
 import { List, Map, Set } from 'immutable';
 import { canonicalIdentifier } from '../canonicalIdentifier';
 import { CanonicalName } from '../CanonicalName';
 import { Definition } from '../Definition';
+import { depnoAPIsURIs } from '../depnoAPIsURIs';
 import { DefinitionNotFoundInBundleError } from '../errors/DefinitionNotFoundInBundleError';
 import { wrapDefinitionWithIIFE } from './wrapDefinitionWithIIFE';
 
-export function generateCodeFromBundle(
+export function getProgramFromBundle(
   definitions: Map<CanonicalName, Definition>,
   execute: Definition
 ) {
@@ -23,17 +26,11 @@ export function generateCodeFromBundle(
     execute.references.valueSeq().toSet(),
     Set()
   );
-  const executionProgram = program(
+  return program(
     definitionsDeclarations
       .push(expressionStatement(wrapDefinitionWithIIFE(execute)))
       .toArray()
   );
-
-  const { code } = generate(executionProgram, undefined, {
-    filename: 'a.ts',
-  })!;
-
-  return code!;
 }
 
 function getDeclarationsFromBundle(
@@ -77,6 +74,18 @@ function declarationOfDefinition(
   canonicalName: CanonicalName,
   definition: Definition
 ) {
+  if (depnoAPIsURIs.includes(canonicalName.uri)) {
+    return importDeclaration(
+      [
+        importSpecifier(
+          identifier(canonicalIdentifier(canonicalName)),
+          identifier(canonicalName.name),
+        ),
+      ],
+      stringLiteral(canonicalName.uri)
+    );
+  }
+  
   return variableDeclaration('var', [
     variableDeclarator(
       identifier(canonicalIdentifier(canonicalName)),

@@ -14,7 +14,7 @@ import { isExportNamedDeclaration, isExportSpecifier } from '@babel/types';
 import { resolveURIFromDependency } from '../resolveURIFromDependency';
 
 export async function getDefinitionFromExternalURI(
-  canonicalName: CanonicalName,
+  canonicalName: CanonicalName
 ): Promise<Definition> {
   let [, contents] = await getContentsFromURI(Map(), canonicalName.uri);
   let [, ast] = await getASTFromCode(Map(), contents, canonicalName.uri);
@@ -36,7 +36,10 @@ export async function getDefinitionFromExternalURI(
   if (isExportNamedDeclaration(definitionNode)) {
     return getDefinitionFromExternalURI(
       CanonicalName({
-        uri: resolveURIFromDependency(definitionNode.source!.value, canonicalName.uri),
+        uri: resolveURIFromDependency(
+          definitionNode.source!.value,
+          canonicalName.uri
+        ),
         name: definitionNode.specifiers.find(
           specifier =>
             isExportSpecifier(specifier) &&

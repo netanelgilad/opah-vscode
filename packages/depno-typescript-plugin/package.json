@@ -1,11 +1,14 @@
 {
   "name": "depno-typescript-plugin",
-  "version": "0.0.174",
+  "version": "0.0.180",
   "main": "index.js",
   "author": "Netanel Gilad",
   "license": "MIT",
   "scripts": {
     "prepublishOnly": "tsc"
+  },
+  "publishConfig": {
+    "registry": "https://registry.npmjs.org/"
   },
   "devDependencies": {
     "@types/lodash.flatmap": "^4.5.6",
@@ -15,7 +18,7 @@
   },
   "dependencies": {
     "@types/node": "^13.13.4",
-    "depno": "^0.1.9",
+    "depno": "^0.1.15",
     "lodash.flatmap": "^4.5.0",
     "merge-deep": "^3.0.2"
   }

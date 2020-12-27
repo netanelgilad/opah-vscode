@@ -1,6 +1,6 @@
 {
   "name": "depno",
-  "version": "0.1.9",
+  "version": "0.1.15",
   "repository": "git@github.com:netanelgilad/depno.git",
   "author": "Netanel Gilad <netanelgilad@gmail.com>",
   "license": "MIT",
@@ -19,6 +19,9 @@
       "dist/*.map",
       "src/**/*"
     ]
+  },
+  "publishConfig": {
+    "registry": "https://registry.npmjs.org/"
   },
   "prettier": {
     "printWidth": 80,

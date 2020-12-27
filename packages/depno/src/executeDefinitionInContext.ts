@@ -1,7 +1,8 @@
 import { Definition } from './Definition';
-import { getExecutionCodeForDefinition } from './getExecutionCodeForDefinition/getExecutionCodeForDefinition';
+import { executeProgram } from './executeProgram';
+import { getExecutionProgramForDefinition } from './getExecutionCodeForDefinition/getExecutionProgramForDefinition';
 
 export async function executeDefinitionInContext(definition: Definition) {
-  const code = await getExecutionCodeForDefinition(definition);
-  return eval(code);
+  const program = await getExecutionProgramForDefinition(definition);
+  return executeProgram(program);
 }
