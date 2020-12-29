@@ -4,7 +4,7 @@ import { writeFileSync } from 'fs';
 import { file } from 'tempy';
 import { getCodeFromExecutionProgram } from './getCodeFromExecutionProgram';
 
-export function forkProgram(program: Program, cwd: string) {
+export function forkProgram(program: Program, cwd: string, silent = false) {
   const code = getCodeFromExecutionProgram(program);
 
   const tmpFile = file({ extension: 'js' });
@@ -13,6 +13,7 @@ export function forkProgram(program: Program, cwd: string) {
 
   return fork(tmpFile, [], {
     cwd: cwd,
+    silent,
     execArgv: ['--unhandled-rejections=strict'],
   });
 }
