@@ -1,18 +1,18 @@
-import { Expression, numericLiteral, unaryExpression } from '@babel/types';
+import { Declaration, variableDeclaration } from '@babel/types';
 import { Map, Record, RecordOf } from 'immutable';
 import { CanonicalName } from './core';
 import { LocalName } from './LocalName';
 
-export type DefinitionProps<ExpressionType extends Expression = Expression> = {
-  expression: ExpressionType;
+export type DefinitionProps<T extends Declaration = Declaration> = {
+  declaration: T;
   references: Map<LocalName, CanonicalName>;
 };
 
 export const Definition = Record<DefinitionProps>({
-  expression: unaryExpression('void', numericLiteral(0)),
+  declaration: variableDeclaration('const', []),
   references: Map(),
 });
 
-export type Definition<
-  ExpressionType extends Expression = Expression
-> = RecordOf<DefinitionProps<ExpressionType>>;
+export type Definition<T extends Declaration = Declaration> = RecordOf<
+  DefinitionProps<T>
+>;

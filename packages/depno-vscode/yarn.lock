@@ -1327,20 +1327,20 @@ define-properties@^1.1.2, define-properties@^1.1.3:
   dependencies:
     object-keys "^1.0.12"
 
-depno-typescript-plugin@^0.0.180:
-  version "0.0.180"
-  resolved "https://registry.yarnpkg.com/depno-typescript-plugin/-/depno-typescript-plugin-0.0.180.tgz#c5ca3845280d273d8028d4882f990772bbfd45b2"
-  integrity sha512-8WU+uHgnfS9bg9PppoBa8Bu7U6Y8KYpDOyP9XKiXmdopMl6hFctCAIKXJ1Fmo0P9VrYdoIyfBom/pL0UPjiu8w==
+depno-typescript-plugin@^0.0.185:
+  version "0.0.185"
+  resolved "https://repo.dev.wixpress.com/artifactory/api/npm/npm-repos/depno-typescript-plugin/-/depno-typescript-plugin-0.0.185.tgz#fab3df77b9cdd9c916a0e5d6bc0b45ce3107b47e"
+  integrity sha1-+rPfd7nN2ckWoOXWvAtFzjEHtH4=
   dependencies:
     "@types/node" "^13.13.4"
-    depno "^0.1.15"
+    depno "^0.1.19"
     lodash.flatmap "^4.5.0"
     merge-deep "^3.0.2"
 
-depno@^0.1.15:
-  version "0.1.15"
-  resolved "https://registry.yarnpkg.com/depno/-/depno-0.1.15.tgz#af17d77f05616705fcc85b1ae7e90a14ad701bf2"
-  integrity sha512-lS9UMe9tpV9a9X+aMshmtjSyal1vM7ojkYDC68tiPgM3TrY272pDQsB+kDFTip0w1zdmvcqjkRFKT3xodxzWkA==
+depno@^0.1.19:
+  version "0.1.19"
+  resolved "https://repo.dev.wixpress.com/artifactory/api/npm/npm-repos/depno/-/depno-0.1.19.tgz#aeafb2cbff4c6ed7bef6f44c421253c2ae5a5424"
+  integrity sha1-rq+yy/9Mbte+9vRMQhJTwq5aVCQ=
   dependencies:
     "@babel/core" "^7.9.6"
     "@babel/generator" "^7.9.6"

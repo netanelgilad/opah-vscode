@@ -1,52 +1,38 @@
 import {
-  classExpression, Expression,
-
-
-  functionExpression,
+  Declaration,
+  identifier,
   isClassDeclaration,
-
   isExportDefaultDeclaration,
-  isExpression, isFunctionDeclaration, isVariableDeclarator
+  isExpression,
+  isFunctionDeclaration,
+  isVariableDeclarator,
+  variableDeclaration,
+  variableDeclarator,
 } from '@babel/types';
-import { isReferencedDefinitionNode } from '../isReferencedDefinitionNode';
 import { ReferencedDefinitionNode } from './ReferencedDefinitionNode';
 
 class NodeWithoutInitError extends Error {}
-class ExportDefaultNonReferencedDefinitionNode extends Error {
-  constructor(recievedNodeType: string) {
-    super(
-      `Found an export default of a non referenced definition node of type ${recievedNodeType}`
-    );
-  }
-}
 
-export function getExpressionFromReferencedDefinitionNode(
+export function getDeclarationFromReferencedDefinitionNode(
   node: ReferencedDefinitionNode
-): Expression {
+): Declaration {
   if (isVariableDeclarator(node)) {
     if (!node.init) {
       throw new NodeWithoutInitError();
     }
-    return node.init;
+    return variableDeclaration('const', [node]);
   } else if (isFunctionDeclaration(node)) {
-    return functionExpression(
-      node.id,
-      node.params,
-      node.body,
-      node.generator,
-      node.async
-    );
+    return node;
   } else if (isClassDeclaration(node)) {
-    return classExpression(null, node.superClass, node.body, node.decorators);
+    return node;
   } else if (isExportDefaultDeclaration(node)) {
     if (isExpression(node.declaration)) {
-      return node.declaration;
+      return variableDeclaration('const', [
+        variableDeclarator(identifier('default'), node.declaration),
+      ]);
     }
 
-    if (!isReferencedDefinitionNode(node.declaration)) {
-      throw new ExportDefaultNonReferencedDefinitionNode(node.declaration.type);
-    }
-    return getExpressionFromReferencedDefinitionNode(node.declaration);
+    return node.declaration;
   }
   return node;
 }

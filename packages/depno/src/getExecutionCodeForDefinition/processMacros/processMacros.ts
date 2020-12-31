@@ -1,8 +1,11 @@
 import traverse from '@babel/traverse';
 import {
-  expressionStatement,
-  ExpressionStatement,
+  arrowFunctionExpression,
+  callExpression,
+  CallExpression,
+  Declaration,
   file,
+  identifier,
   isIdentifier,
   program,
 } from '@babel/types';
@@ -12,16 +15,16 @@ import { fields, variant } from 'variant';
 import { assertExpression } from '../../assertExpression';
 import { assertIdentifier } from '../../assertIdentifier';
 import { canonicalIdentifier } from '../../canonicalIdentifier';
+import { Closure } from '../../Closure';
 import { CanonicalName } from '../../core';
 import { Definition } from '../../Definition';
-import { executeDefinitionInContext } from '../../executeDefinitionInContext';
+import { executeClosureInContext } from '../../executeDefinitionInContext';
 import { getDefinitionForCanonicalName } from '../../getDefinitionForCanonicalName';
+import { getOutOfScopeReferences } from '../../getOutOfScopeReferences';
 import { LocalName } from '../../LocalName';
 import { MacroFunction } from '../../MacroFunction';
 import { isMacroDefinition } from '../isMacroDefinition';
 import { withCache } from '../withCache';
-import { wrapDefinitionWithIIFE } from '../wrapDefinitionWithIIFE';
-import { getOutOfScopeReferences } from '../../getOutOfScopeReferences';
 
 export async function processMacros(
   canonicalName: CanonicalName,
@@ -55,7 +58,7 @@ export async function processMacros(
     )
   );
 
-  let tempProgram = program([expressionStatement(definition.expression)]);
+  let tempProgram = program([definition.declaration]);
 
   const transformPromises: Promise<void>[] = [];
 
@@ -89,7 +92,7 @@ export async function processMacros(
                     return result;
                   }, Map<LocalName, CanonicalName>());
 
-                  return Definition({
+                  return Closure({
                     expression: argExpression,
                     references: argReferences,
                   });
@@ -117,20 +120,25 @@ export async function processMacros(
 
               if (conflicts.size > 0) {
                 referencePath.replaceWith(
-                  wrapDefinitionWithIIFE(
-                    Definition({
+                  wrapClosureWithIIFE(
+                    Closure({
                       expression: replacement.expression,
                       references: conflicts,
                     })
                   )
                 );
-                referencesToMerge = replacement.references.mapEntries(([localName, canonicalName]) => {
-                  if (conflicts.has(localName)) {
-                    return [canonicalIdentifier(canonicalName), canonicalName]
-                  } else {
-                    return [localName, canonicalName]
+                referencesToMerge = replacement.references.mapEntries(
+                  ([localName, canonicalName]) => {
+                    if (conflicts.has(localName)) {
+                      return [
+                        canonicalIdentifier(canonicalName),
+                        canonicalName,
+                      ];
+                    } else {
+                      return [localName, canonicalName];
+                    }
                   }
-                });
+                );
               } else {
                 referencePath.replaceWith(replacement.expression);
               }
@@ -149,8 +157,8 @@ export async function processMacros(
   await Promise.all(transformPromises);
 
   definition = definition.set(
-    'expression',
-    (tempProgram.body[0] as ExpressionStatement).expression
+    'declaration',
+    tempProgram.body[0] as Declaration
   );
   definition = definition.set(
     'references',
@@ -171,12 +179,31 @@ const getMacroFunction = withCache(
     if (!isMacroDefinition(definition)) {
       throw NonMacroDefinitionError({ canonicalName: macroCanonicalName });
     }
-    assertExpression(definition.expression.arguments[0]);
-    return (await executeDefinitionInContext(
-      Definition({
-        expression: definition.expression.arguments[0],
+    const macroFunction = (definition.declaration.declarations[0]
+      .init! as CallExpression).arguments[0];
+    assertExpression(macroFunction);
+    return (await executeClosureInContext(
+      Closure({
+        expression: macroFunction,
         references: definition.references,
       })
     )) as MacroFunction;
   }
 );
+
+function wrapClosureWithIIFE(closure: Closure) {
+  return callExpression(
+    arrowFunctionExpression(
+      closure.references
+        .keySeq()
+        .map(reference => identifier(reference))
+        .toArray(),
+      closure.expression
+    ),
+    closure.references
+      .valueSeq()
+      .map(canonicalIdentifier)
+      .map(x => identifier(x))
+      .toArray()
+  );
+}

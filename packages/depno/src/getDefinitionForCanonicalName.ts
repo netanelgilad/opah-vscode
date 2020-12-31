@@ -1,5 +1,8 @@
 import {
-  nullLiteral
+  identifier,
+  importDeclaration,
+  importSpecifier,
+  stringLiteral,
 } from '@babel/types';
 import { Map } from 'immutable';
 import { CanonicalName } from './CanonicalName';
@@ -12,7 +15,15 @@ export const getDefinitionForCanonicalName = withCache(
   async (canonicalName: CanonicalName) => {
     if (depnoAPIsURIs.includes(canonicalName.uri)) {
       return Definition({
-        expression: nullLiteral(),
+        declaration: importDeclaration(
+          [
+            importSpecifier(
+              identifier(canonicalName.name),
+              identifier(canonicalName.name)
+            ),
+          ],
+          stringLiteral(canonicalName.uri)
+        ),
         references: Map(),
       });
     } else {

@@ -1,4 +1,5 @@
 import { Map } from 'immutable';
+import { Closure } from '../Closure';
 import { CanonicalName } from '../core';
 import { Definition } from '../Definition';
 import { getDefinitionForCanonicalName } from '../getDefinitionForCanonicalName';
@@ -6,9 +7,9 @@ import { getProgramFromBundle } from './generateCodeFromBundle';
 import { isMacroDefinition } from './isMacroDefinition';
 import { processMacros } from './processMacros/processMacros';
 
-export async function getExecutionProgramForDefinition(definition: Definition) {
+export async function getExecutionProgramForDefinition(closure: Closure) {
   let definitions = Map<CanonicalName, Definition>();
-  let references = definition.references.valueSeq().toSet();
+  let references = closure.references.valueSeq().toSet();
   while (references.size > 0) {
     const reference = references.first(false);
     if (!reference) {
@@ -35,5 +36,5 @@ export async function getExecutionProgramForDefinition(definition: Definition) {
     references = references.remove(reference);
   }
 
-  return getProgramFromBundle(definitions, definition);
+  return getProgramFromBundle(definitions, closure);
 }

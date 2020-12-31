@@ -3,7 +3,7 @@ import * as types from '@babel/types';
 import { stringLiteral } from '@babel/types';
 import { Map } from 'immutable';
 import { CanonicalName } from '../CanonicalName';
-import { Definition } from '../Definition';
+import { Closure } from '../Closure';
 import { forkProgram } from '../forkProgram';
 import { getExecutionProgramForDefinition } from '../getExecutionCodeForDefinition/getExecutionProgramForDefinition';
 
@@ -36,11 +36,11 @@ export async function executeCanonicalName(
   );
 
   const program = await getExecutionProgramForDefinition(
-    Definition({
+    Closure({
       expression,
       references: Map([[mainFunctionName, canonicalName]]),
     })
   );
 
-  return forkProgram(program, opts.cwd || process.cwd())
+  return forkProgram(program, opts.cwd || process.cwd());
 }

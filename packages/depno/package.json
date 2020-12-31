@@ -1,6 +1,6 @@
 {
   "name": "depno",
-  "version": "0.1.15",
+  "version": "0.1.19",
   "repository": "git@github.com:netanelgilad/depno.git",
   "author": "Netanel Gilad <netanelgilad@gmail.com>",
   "license": "MIT",

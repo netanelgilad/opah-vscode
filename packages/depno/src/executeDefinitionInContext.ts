@@ -1,8 +1,8 @@
-import { Definition } from './Definition';
+import { Closure } from './Closure';
 import { executeProgram } from './executeProgram';
 import { getExecutionProgramForDefinition } from './getExecutionCodeForDefinition/getExecutionProgramForDefinition';
 
-export async function executeDefinitionInContext(definition: Definition) {
-  const program = await getExecutionProgramForDefinition(definition);
+export async function executeClosureInContext(closure: Closure) {
+  const program = await getExecutionProgramForDefinition(closure);
   return executeProgram(program);
 }

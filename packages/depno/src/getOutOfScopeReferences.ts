@@ -1,21 +1,33 @@
 import traverse from '@babel/traverse';
 import {
-  Expression,
-  file,
-  program,
   expressionStatement,
+  file,
+  isDeclaration,
+  isExpression,
   isIdentifier,
+  Node,
+  program,
 } from '@babel/types';
 import { Set } from 'immutable';
 import { LocalName } from './LocalName';
 
-export function getOutOfScopeReferences(expression: Expression) {
-  if (isIdentifier(expression)) {
-    return Set<LocalName>([expression.name]);
+export function getOutOfScopeReferences(node: Node) {
+  if (isIdentifier(node)) {
+    return Set<LocalName>([node.name]);
   }
   return Set<LocalName>().withMutations(references => {
     traverse(
-      file(program([expressionStatement(expression)]), undefined, undefined),
+      file(
+        program(
+          isExpression(node)
+            ? [expressionStatement(node)]
+            : isDeclaration(node)
+            ? [node]
+            : []
+        ),
+        undefined,
+        undefined
+      ),
       {
         // @ts-ignore
         ReferencedIdentifier(referencePath: NodePath<Identifier>) {

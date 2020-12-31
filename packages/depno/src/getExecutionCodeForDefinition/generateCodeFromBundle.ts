@@ -1,34 +1,47 @@
 import {
+  classDeclaration,
+  Declaration,
   expressionStatement,
+  functionDeclaration,
   identifier,
   importDeclaration,
   importSpecifier,
+  isClassDeclaration,
+  isFunctionDeclaration,
+  isVariableDeclaration,
   program,
   Statement,
   stringLiteral,
   variableDeclaration,
-  variableDeclarator
+  variableDeclarator,
 } from '@babel/types';
 import { List, Map, Set } from 'immutable';
 import { canonicalIdentifier } from '../canonicalIdentifier';
 import { CanonicalName } from '../CanonicalName';
+import { Closure } from '../Closure';
 import { Definition } from '../Definition';
 import { depnoAPIsURIs } from '../depnoAPIsURIs';
 import { DefinitionNotFoundInBundleError } from '../errors/DefinitionNotFoundInBundleError';
-import { wrapDefinitionWithIIFE } from './wrapDefinitionWithIIFE';
+import { replaceReferencesToCanonicalReferences } from '../repalceReferencesToCanonicalNames';
 
 export function getProgramFromBundle(
   definitions: Map<CanonicalName, Definition>,
-  execute: Definition
+  execute: Closure
 ) {
   const [definitionsDeclarations] = getDeclarationsFromBundle(
     definitions,
     execute.references.valueSeq().toSet(),
     Set()
   );
+
+  const replacedExecuteExpression = replaceReferencesToCanonicalReferences(
+    execute.expression,
+    execute.references
+  );
+
   return program(
     definitionsDeclarations
-      .push(expressionStatement(wrapDefinitionWithIIFE(execute)))
+      .push(expressionStatement(replacedExecuteExpression))
       .toArray()
   );
 }
@@ -79,17 +92,47 @@ function declarationOfDefinition(
       [
         importSpecifier(
           identifier(canonicalIdentifier(canonicalName)),
-          identifier(canonicalName.name),
+          identifier(canonicalName.name)
         ),
       ],
       stringLiteral(canonicalName.uri)
     );
   }
-  
-  return variableDeclaration('var', [
-    variableDeclarator(
-      identifier(canonicalIdentifier(canonicalName)),
-      wrapDefinitionWithIIFE(definition)
-    ),
-  ]) as Statement;
+
+  const declarationWithReplacedReferences = replaceReferencesToCanonicalReferences(
+    definition.declaration,
+    definition.references,
+    canonicalName
+  );
+
+  const declarationWithCanonicalName = replaceDeclarationId(
+    declarationWithReplacedReferences,
+    canonicalIdentifier(canonicalName)
+  );
+
+  return declarationWithCanonicalName;
+}
+
+function replaceDeclarationId(declaration: Declaration, id: string) {
+  if (isVariableDeclaration(declaration)) {
+    return variableDeclaration('const', [
+      variableDeclarator(identifier(id), declaration.declarations[0].init),
+    ]);
+  } else if (isFunctionDeclaration(declaration)) {
+    return functionDeclaration(
+      identifier(id),
+      declaration.params,
+      declaration.body,
+      declaration.generator,
+      declaration.async
+    );
+  } else if (isClassDeclaration(declaration)) {
+    return classDeclaration(
+      identifier(id),
+      declaration.superClass,
+      declaration.body,
+      declaration.decorators
+    );
+  }
+  throw new Error(`Unknown declaration type: ${declaration.type}`);
 }

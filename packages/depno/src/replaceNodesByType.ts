@@ -1,19 +1,19 @@
 import traverse, { NodePath } from '@babel/traverse';
 import {
-  Expression,
-  ExpressionStatement,
-  expressionStatement,
+  Declaration,
   file,
   Node,
   program
 } from '@babel/types';
 
 export async function replaceNodesByType<T extends Node>(
-  expression: Expression,
+  node: Declaration,
   type: T['type'],
   replacer: (node: T) => Promise<Node | undefined>
 ) {
-  let tempProgram = program([expressionStatement(expression)]);
+  let tempProgram = program([
+    node
+  ]);
 
   const transformPromises: Promise<void>[] = [];
 
@@ -25,7 +25,7 @@ export async function replaceNodesByType<T extends Node>(
             await Promise.all(transformPromises);
             const replacement = await replacer(path.node);
             if (replacement) {
-              path.parentPath.replaceWith(replacement);
+              path.replaceWith(replacement);
             }
           })()
         );
@@ -35,5 +35,5 @@ export async function replaceNodesByType<T extends Node>(
 
   await Promise.all(transformPromises);
 
-  return (tempProgram.body[0] as ExpressionStatement).expression;
+  return tempProgram.body[0] as Declaration;
 }

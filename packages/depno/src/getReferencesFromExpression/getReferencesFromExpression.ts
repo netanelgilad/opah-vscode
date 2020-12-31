@@ -1,20 +1,20 @@
 import { NodePath } from '@babel/core';
-import { Expression, Program } from '@babel/types';
+import { Declaration, Program } from '@babel/types';
 import { Map } from 'immutable';
 import { CanonicalName } from '../core';
-import { getCanonicalNameFromPath } from './getCanonicalNameFromPath';
-import { globals } from './globals';
-import { LocalName } from '../LocalName';
 import { DefinitionNotFoundError } from '../DefinitionNotFoundError';
 import { getOutOfScopeReferences } from '../getOutOfScopeReferences';
+import { LocalName } from '../LocalName';
+import { getCanonicalNameFromPath } from './getCanonicalNameFromPath';
+import { globals } from './globals';
 
-export function getReferencesFromExpression(
-  expression: Expression,
+export function getReferencesFromDeclaration(
+  declaration: Declaration,
   uri: string,
   programPath: NodePath<Program>
 ) {
   return Map(
-    getOutOfScopeReferences(expression)
+    getOutOfScopeReferences(declaration)
       .flatMap(reference => {
         const programBinding = programPath.scope.getBinding(reference);
         if (!programBinding) {

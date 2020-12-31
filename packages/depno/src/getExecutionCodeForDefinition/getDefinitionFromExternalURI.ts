@@ -8,8 +8,8 @@ import { getContentsFromURI } from './getContentsFromURI';
 import { isReferencedDefinitionNode } from '../isReferencedDefinitionNode';
 import { DefinitionNotFoundError } from '../DefinitionNotFoundError';
 import { getDefinitionAndProgramPaths } from './getDefinitionAndProgramPath';
-import { getExpressionFromReferencedDefinitionNode } from './getExpressionFromReferenceDefinitionNode';
-import { getReferencesFromExpression } from '../getReferencesFromExpression/getReferencesFromExpression';
+import { getDeclarationFromReferencedDefinitionNode } from './getExpressionFromReferenceDefinitionNode';
+import { getReferencesFromDeclaration } from '../getReferencesFromExpression/getReferencesFromExpression';
 import { isExportNamedDeclaration, isExportSpecifier } from '@babel/types';
 import { resolveURIFromDependency } from '../resolveURIFromDependency';
 
@@ -53,14 +53,14 @@ export async function getDefinitionFromExternalURI(
     );
   }
 
-  const definitionExpression = getExpressionFromReferencedDefinitionNode(
+  const declaration = getDeclarationFromReferencedDefinitionNode(
     definitionNode
   );
 
   let references: Map<string, CanonicalName>;
   try {
-    references = getReferencesFromExpression(
-      definitionExpression,
+    references = getReferencesFromDeclaration(
+      declaration,
       canonicalName.uri,
       programPath
     );
@@ -76,7 +76,7 @@ export async function getDefinitionFromExternalURI(
   }
 
   return Definition({
-    expression: definitionExpression,
+    declaration,
     references,
   });
 }

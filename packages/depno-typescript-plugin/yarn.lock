@@ -1023,10 +1023,10 @@ define-properties@^1.1.3:
   dependencies:
     object-keys "^1.0.12"
 
-depno@^0.1.15:
-  version "0.1.15"
-  resolved "https://registry.yarnpkg.com/depno/-/depno-0.1.15.tgz#af17d77f05616705fcc85b1ae7e90a14ad701bf2"
-  integrity sha512-lS9UMe9tpV9a9X+aMshmtjSyal1vM7ojkYDC68tiPgM3TrY272pDQsB+kDFTip0w1zdmvcqjkRFKT3xodxzWkA==
+depno@^0.1.19:
+  version "0.1.19"
+  resolved "https://repo.dev.wixpress.com/artifactory/api/npm/npm-repos/depno/-/depno-0.1.19.tgz#aeafb2cbff4c6ed7bef6f44c421253c2ae5a5424"
+  integrity sha1-rq+yy/9Mbte+9vRMQhJTwq5aVCQ=
   dependencies:
     "@babel/core" "^7.9.6"
     "@babel/generator" "^7.9.6"
