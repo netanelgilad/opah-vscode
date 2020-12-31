@@ -14,6 +14,5 @@ export function forkProgram(program: Program, cwd: string, silent = false) {
   return fork(tmpFile, [], {
     cwd: cwd,
     silent,
-    execArgv: ['--unhandled-rejections=strict'],
   });
 }

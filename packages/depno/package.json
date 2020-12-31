@@ -1,6 +1,6 @@
 {
   "name": "depno",
-  "version": "0.1.19",
+  "version": "0.1.21",
   "repository": "git@github.com:netanelgilad/depno.git",
   "author": "Netanel Gilad <netanelgilad@gmail.com>",
   "license": "MIT",
@@ -45,6 +45,7 @@
     "babel-errors": "^1.1.1",
     "immutable": "^4.0.0-rc.12",
     "jsesc": "^3.0.1",
+    "pkg": "^4.4.8",
     "source-map-support": "^0.5.19",
     "tempy": "^0.5.0",
     "variant": "^2.0.2-beta.8"
@@ -61,7 +62,6 @@
     "babel-jest": "^25.5.1",
     "chance": "^1.1.4",
     "jest": "^26.6.3",
-    "pkg": "^4.4.8",
     "prettier": "^1.19.1",
     "rimraf": "^3.0.2",
     "strip-indent": "^3.0.0",

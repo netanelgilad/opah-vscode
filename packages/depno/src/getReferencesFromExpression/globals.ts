@@ -17,4 +17,5 @@ export const globals = [
   'escape',
   'Int32Array',
   'String',
+  'process'
 ];

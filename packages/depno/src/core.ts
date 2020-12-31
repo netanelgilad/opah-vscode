@@ -10,3 +10,4 @@ export { getBindingsStatementsFromFileAST } from './getBindingsStatementsFromFil
 export { getOutOfScopeReferences } from './getOutOfScopeReferences';
 export { replaceNodesByType } from './replaceNodesByType';
 export { replaceReferencesToCanonicalReferences } from './repalceReferencesToCanonicalNames';
+export { buildExecutable } from './buildExecutable';
