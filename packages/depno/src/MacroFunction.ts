@@ -5,6 +5,8 @@ import { Closure } from './Closure';
 
 type MaybePromise<T> = T | Promise<T>;
 
-export type MacroFunction = (
-  ...args: Closure[]
-) => MaybePromise<Closure | [Closure, Map<CanonicalName, Definition>]>;
+type MapToClosure<T> = { [K in keyof T]: Closure<T[K]> };
+
+export type MacroFunction<T extends any[] = unknown[], TReturn extends any = unknown> = (
+  ...args: MapToClosure<T>
+) => MaybePromise<Closure<TReturn> | [Closure<TReturn>, Map<CanonicalName, Definition>]>;

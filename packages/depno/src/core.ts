@@ -1,13 +1,14 @@
 import { MacroFunction } from './MacroFunction';
 
-export { Definition } from './Definition';
+export * from '@babel/types';
+export { buildExecutable } from './buildExecutable';
 export { CanonicalName } from './CanonicalName';
 export { Closure } from './Closure';
-export * from '@babel/types';
-export declare function createMacro<T>(fn: MacroFunction): T;
+export { Definition } from './Definition';
 export { getASTFromCode } from './getASTFromCode';
 export { getBindingsStatementsFromFileAST } from './getBindingsStatementsFromFileAST';
 export { getOutOfScopeReferences } from './getOutOfScopeReferences';
-export { replaceNodesByType } from './replaceNodesByType';
 export { replaceReferencesToCanonicalReferences } from './repalceReferencesToCanonicalNames';
-export { buildExecutable } from './buildExecutable';
+export { replaceNodesByType } from './replaceNodesByType';
+export declare function createMacro<TArgs extends any[], TReturn>(fn: MacroFunction<TArgs, TReturn>): (...args: TArgs) => TReturn;
+

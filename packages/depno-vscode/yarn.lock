@@ -1436,20 +1436,20 @@ delayed-stream@~1.0.0:
   resolved "https://registry.yarnpkg.com/delayed-stream/-/delayed-stream-1.0.0.tgz#df3ae199acadfb7d440aaae0b29e2272b24ec619"
   integrity sha1-3zrhmayt+31ECqrgsp4icrJOxhk=
 
-depno-typescript-plugin@^0.0.186:
-  version "0.0.186"
-  resolved "https://registry.yarnpkg.com/depno-typescript-plugin/-/depno-typescript-plugin-0.0.186.tgz#819177dd4438dafad7fc3137536f5861daf7d2bb"
-  integrity sha512-kV23an7z4nygWNk3leVGX149wtCa5gxnUqJ4N1rEBSpO5QWmce6JlO8lbSh5nQ399vZVPP0QYvQZ5HRcVNlMgg==
+depno-typescript-plugin@^0.0.191:
+  version "0.0.191"
+  resolved "https://registry.yarnpkg.com/depno-typescript-plugin/-/depno-typescript-plugin-0.0.191.tgz#19d7c511816a9b3cd782d77195053de0f8490ddf"
+  integrity sha512-VwN0D6iVBnHPdHWwHhXAQNPQW+evi8uIXWXDwVRFoTK1KtmbIod9Y8CZK4E/PxxhFzzu5UVc+arTzqZcQ1Sjtg==
   dependencies:
     "@types/node" "^13.13.4"
-    depno "^0.1.21"
+    depno "^0.1.26"
     lodash.flatmap "^4.5.0"
     merge-deep "^3.0.2"
 
-depno@^0.1.21:
-  version "0.1.21"
-  resolved "https://registry.yarnpkg.com/depno/-/depno-0.1.21.tgz#f1e22a92befdf5f05829e56bd143f53721a13c2b"
-  integrity sha512-BYHwfsgOJOx7rDJ3c6IV938rW8yAPRVXaLUzNUi7Ob3wxX2kgHojVqk4YeSx1s1b+3vZdnZ4k8nnQjLbTzL1Kw==
+depno@^0.1.26:
+  version "0.1.26"
+  resolved "https://registry.yarnpkg.com/depno/-/depno-0.1.26.tgz#9aca656a885626bd6442dc042c0d5743e67f0726"
+  integrity sha512-cOAMBcevc46BFsWEx9c2jpJeMbPKlhuKwiIfxeANUiS96DGhkLJ2J4YeCIFWKMUOehqsNcNyW1cfs7scrHlNBg==
   dependencies:
     "@babel/core" "^7.9.6"
     "@babel/generator" "^7.9.6"
