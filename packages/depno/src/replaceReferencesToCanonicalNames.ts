@@ -10,6 +10,7 @@ import {
   identifier,
   ExpressionStatement,
   isIdentifier,
+  cloneNode,
 } from '@babel/types';
 import traverse from '@babel/traverse';
 import { CanonicalName } from './CanonicalName';
@@ -34,11 +35,13 @@ export function replaceReferencesToCanonicalReferences(
     return identifier(canonicalIdentifier(references.get(node.name)!));
   }
 
+  const clonedNode = cloneNode(node);
+
   let tempProgram = program(
-    isExpression(node)
-      ? [expressionStatement(node)]
-      : isDeclaration(node)
-      ? [node]
+    isExpression(clonedNode)
+      ? [expressionStatement(clonedNode)]
+      : isDeclaration(clonedNode)
+      ? [clonedNode]
       : []
   );
 

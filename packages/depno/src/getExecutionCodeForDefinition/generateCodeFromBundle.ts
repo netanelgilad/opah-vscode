@@ -22,7 +22,7 @@ import { Closure } from '../Closure';
 import { Definition } from '../Definition';
 import { depnoAPIsURIs } from '../depnoAPIsURIs';
 import { DefinitionNotFoundInBundleError } from '../errors/DefinitionNotFoundInBundleError';
-import { replaceReferencesToCanonicalReferences } from '../repalceReferencesToCanonicalNames';
+import { replaceReferencesToCanonicalReferences } from '../replaceReferencesToCanonicalNames';
 
 export function getProgramFromBundle(
   definitions: Map<CanonicalName, Definition>,
