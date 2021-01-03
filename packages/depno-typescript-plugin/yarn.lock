@@ -1171,10 +1171,10 @@ delayed-stream@~1.0.0:
   resolved "https://registry.yarnpkg.com/delayed-stream/-/delayed-stream-1.0.0.tgz#df3ae199acadfb7d440aaae0b29e2272b24ec619"
   integrity sha1-3zrhmayt+31ECqrgsp4icrJOxhk=
 
-depno@^0.1.26:
-  version "0.1.26"
-  resolved "https://registry.yarnpkg.com/depno/-/depno-0.1.26.tgz#9aca656a885626bd6442dc042c0d5743e67f0726"
-  integrity sha512-cOAMBcevc46BFsWEx9c2jpJeMbPKlhuKwiIfxeANUiS96DGhkLJ2J4YeCIFWKMUOehqsNcNyW1cfs7scrHlNBg==
+depno@^0.1.27:
+  version "0.1.27"
+  resolved "https://registry.yarnpkg.com/depno/-/depno-0.1.27.tgz#98aacad2b43810191245e29e2ffb096b9736ba21"
+  integrity sha512-pH3ixwQIlUScxFS4WVLxBh1ykd5bCFWyv1D6N+Yhl9QasyjvfpM5Jl5oPw1UXOO9SkyY6o07j2FPNsE0zIT1XA==
   dependencies:
     "@babel/core" "^7.9.6"
     "@babel/generator" "^7.9.6"
