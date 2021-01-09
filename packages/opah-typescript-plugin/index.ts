@@ -40,13 +40,13 @@ function init(modules: {
     noEmitHelpers: OPTIONS.noEmitHelpers,
     target: ts.ScriptTarget.ESNext,
     typeRoots: [],
-    types: [nodeTypesPath, join(__dirname, "depno-core"), join(__dirname, "depno-host")],
+    types: [nodeTypesPath, join(__dirname, "opah-core"), join(__dirname, "opah-host")],
     lib: ["lib.esnext.d.ts"],
   };
 
   function create(info: ts.server.PluginCreateInfo) {
     function log(message: any) {
-      // info.project.projectService.logger.info(`depno: ${message}`);
+      // info.project.projectService.logger.info(`opah: ${message}`);
     }
 
     const projectDirectory = info.project.getCurrentDirectory();
@@ -69,7 +69,7 @@ function init(modules: {
       options: ts.CompilerOptions = OPTIONS
     ) => {
       moduleNames = moduleNames.map((moduleName) =>
-        ["@depno/immutable", "immutable", immutableJSPath].includes(moduleName)
+        ["@opah/immutable", "immutable", immutableJSPath].includes(moduleName)
           ? immutableTypesPath
           : stripExtNameDotTs(moduleName)
       );

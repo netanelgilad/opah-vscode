@@ -1,6 +1,6 @@
 {
-  "name": "depno-typescript-plugin",
-  "version": "0.0.193",
+  "name": "opah-typescript-plugin",
+  "version": "0.0.194",
   "main": "index.js",
   "author": "Netanel Gilad",
   "license": "MIT",
@@ -18,8 +18,8 @@
   },
   "dependencies": {
     "@types/node": "^13.13.4",
-    "depno": "^0.1.29",
     "lodash.flatmap": "^4.5.0",
-    "merge-deep": "^3.0.2"
+    "merge-deep": "^3.0.2",
+    "opah": "^0.1.30"
   }
 }

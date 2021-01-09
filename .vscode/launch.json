@@ -8,9 +8,9 @@
       "type": "node",
       "request": "launch",
       "runtimeVersion": "14.13.0",
-      "name": "depno/ Debug Current Test",
-      "program": "${workspaceFolder}/packages/depno/node_modules/.bin/jest",
-      "cwd": "${workspaceFolder}/packages/depno",
+      "name": "opah/ Debug Current Test",
+      "program": "${workspaceFolder}/packages/opah/node_modules/.bin/jest",
+      "cwd": "${workspaceFolder}/packages/opah",
       "args": ["${fileBasename}"],
       "skipFiles": [
         "node_modules/**/*.js",

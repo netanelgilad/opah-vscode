@@ -13,13 +13,13 @@ import {
 import { Map } from 'immutable';
 import { builtinModules } from 'module';
 
-const depnoAPIsToRequireMap = Map(
+const opahAPIsToRequireMap = Map(
   builtinModules
     .map(x => [x, x] as [string, string])
     .concat([
-      ['@depno/core', require.resolve('./core')] as [string, string],
-      ['@depno/host', require.resolve('./host')] as [string, string],
-      ['@depno/immutable', require.resolve('immutable')] as [string, string],
+      ['@opah/core', require.resolve('./core')] as [string, string],
+      ['@opah/host', require.resolve('./host')] as [string, string],
+      ['@opah/immutable', require.resolve('immutable')] as [string, string],
     ])
 );
 
@@ -36,7 +36,7 @@ export function getCodeFromExecutionProgram(program: Program) {
                   memberExpression(
                     callExpression(identifier('require'), [
                       stringLiteral(
-                        depnoAPIsToRequireMap.get(path.node.source!.value)!
+                        opahAPIsToRequireMap.get(path.node.source!.value)!
                       ),
                     ]),
                     (path.node.specifiers[0] as ImportSpecifier).imported

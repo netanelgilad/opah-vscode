@@ -7,13 +7,13 @@ import {
 import { Map } from 'immutable';
 import { CanonicalName } from './CanonicalName';
 import { Definition } from './Definition';
-import { depnoAPIsURIs } from './depnoAPIsURIs';
+import { opahAPIsURIs } from './opahAPIsURIs';
 import { getDefinitionFromExternalURI } from './getExecutionCodeForDefinition/getDefinitionFromExternalURI';
 import { withCache } from './getExecutionCodeForDefinition/withCache';
 
 export const getDefinitionForCanonicalName = withCache(
   async (canonicalName: CanonicalName) => {
-    if (depnoAPIsURIs.includes(canonicalName.uri)) {
+    if (opahAPIsURIs.includes(canonicalName.uri)) {
       return Definition({
         declaration: importDeclaration(
           [

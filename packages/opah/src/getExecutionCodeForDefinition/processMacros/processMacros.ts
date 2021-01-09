@@ -37,7 +37,7 @@ export async function processMacros(
       !referenceCanonicalName.equals(canonicalName) &&
       !referenceCanonicalName.equals(
         CanonicalName({
-          uri: '@depno/core',
+          uri: '@opah/core',
           name: 'createMacro',
         })
       ) &&

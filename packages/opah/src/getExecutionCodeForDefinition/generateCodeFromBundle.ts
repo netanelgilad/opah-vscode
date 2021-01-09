@@ -20,7 +20,7 @@ import { canonicalIdentifier } from '../canonicalIdentifier';
 import { CanonicalName } from '../CanonicalName';
 import { Closure } from '../Closure';
 import { Definition } from '../Definition';
-import { depnoAPIsURIs } from '../depnoAPIsURIs';
+import { opahAPIsURIs } from '../opahAPIsURIs';
 import { DefinitionNotFoundInBundleError } from '../errors/DefinitionNotFoundInBundleError';
 import { replaceReferencesToCanonicalReferences } from '../replaceReferencesToCanonicalNames';
 
@@ -87,7 +87,7 @@ function declarationOfDefinition(
   canonicalName: CanonicalName,
   definition: Definition
 ) {
-  if (depnoAPIsURIs.includes(canonicalName.uri)) {
+  if (opahAPIsURIs.includes(canonicalName.uri)) {
     return importDeclaration(
       [
         importSpecifier(

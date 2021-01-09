@@ -1436,41 +1436,6 @@ delayed-stream@~1.0.0:
   resolved "https://registry.yarnpkg.com/delayed-stream/-/delayed-stream-1.0.0.tgz#df3ae199acadfb7d440aaae0b29e2272b24ec619"
   integrity sha1-3zrhmayt+31ECqrgsp4icrJOxhk=
 
-depno-typescript-plugin@^0.0.193:
-  version "0.0.193"
-  resolved "https://registry.yarnpkg.com/depno-typescript-plugin/-/depno-typescript-plugin-0.0.193.tgz#3ad4d492cef3a6166ed71c2d8305375beb977fbb"
-  integrity sha512-R3kLrVzmzLiqO58PHBns/idjp9xvcOfSR+iLgL/WCBtIjVJn5FFbgySB2usyekA4DlGLhrjq0DtmSw74/zjSmA==
-  dependencies:
-    "@types/node" "^13.13.4"
-    depno "^0.1.29"
-    lodash.flatmap "^4.5.0"
-    merge-deep "^3.0.2"
-
-depno@^0.1.29:
-  version "0.1.29"
-  resolved "https://registry.yarnpkg.com/depno/-/depno-0.1.29.tgz#54aaf2a42c6a6aeee75c7a841ce97a634535a3ca"
-  integrity sha512-UcK/gLrml6QDsu/KX4AO7EoMoZMtTu82bkl6w++LAeq7KkSJYpIOGpdyyGAaraEdQKe1eYIcncRLeO4HpXLpQA==
-  dependencies:
-    "@babel/core" "^7.9.6"
-    "@babel/generator" "^7.9.6"
-    "@babel/plugin-transform-modules-commonjs" "^7.9.6"
-    "@babel/preset-env" "^7.9.6"
-    "@babel/preset-typescript" "^7.9.0"
-    "@babel/template" "^7.10.4"
-    "@babel/traverse" "^7.9.6"
-    "@babel/types" "^7.9.6"
-    "@deaven/tuple" "^1.0.0"
-    "@deaven/unimplemented" "^1.0.1"
-    async "^3.2.0"
-    axios "^0.19.2"
-    babel-errors "^1.1.1"
-    immutable "^4.0.0-rc.12"
-    jsesc "^3.0.1"
-    pkg "^4.4.8"
-    source-map-support "^0.5.19"
-    tempy "^0.5.0"
-    variant "^2.0.2-beta.8"
-
 diff@3.5.0:
   version "3.5.0"
   resolved "https://registry.yarnpkg.com/diff/-/diff-3.5.0.tgz#800c0dd1e0a8bfbc95835c202ad220fe317e5a12"
@@ -2563,6 +2528,41 @@ onetime@^5.1.0:
   integrity sha512-5NcSkPHhwTVFIQN+TUqXoS5+dlElHXdpAWu9I0HP20YOtIi+aZ0Ct82jdlILDxjLEAWwvm+qj1m6aEtsDVmm6Q==
   dependencies:
     mimic-fn "^2.1.0"
+
+opah-typescript-plugin@^0.0.194:
+  version "0.0.194"
+  resolved "https://registry.yarnpkg.com/opah-typescript-plugin/-/opah-typescript-plugin-0.0.194.tgz#b766029767a81c0b752364fe43bed9db741b5ace"
+  integrity sha512-r5MYfqwSUgK8XN0NvFpVjoYx96fPWEAWSb5NOid+aPUr0EG9vq3H+dMMCuUdo3FJ3LHwJ0szwIAsURjE4eu+vA==
+  dependencies:
+    "@types/node" "^13.13.4"
+    lodash.flatmap "^4.5.0"
+    merge-deep "^3.0.2"
+    opah "^0.1.30"
+
+opah@^0.1.30:
+  version "0.1.30"
+  resolved "https://registry.yarnpkg.com/opah/-/opah-0.1.30.tgz#2e81b3689b6b9edf65f8e5e9fa04fab2ac63ea46"
+  integrity sha512-I7D8+4vkGDBB3bH3F7VO3fNdnJcid5caLAXw+viXzocPzFuPVYnV4drsA+X+Ol7lXfttpCvyMktBgLBLV8zqIA==
+  dependencies:
+    "@babel/core" "^7.9.6"
+    "@babel/generator" "^7.9.6"
+    "@babel/plugin-transform-modules-commonjs" "^7.9.6"
+    "@babel/preset-env" "^7.9.6"
+    "@babel/preset-typescript" "^7.9.0"
+    "@babel/template" "^7.10.4"
+    "@babel/traverse" "^7.9.6"
+    "@babel/types" "^7.9.6"
+    "@deaven/tuple" "^1.0.0"
+    "@deaven/unimplemented" "^1.0.1"
+    async "^3.2.0"
+    axios "^0.19.2"
+    babel-errors "^1.1.1"
+    immutable "^4.0.0-rc.12"
+    jsesc "^3.0.1"
+    pkg "^4.4.8"
+    source-map-support "^0.5.19"
+    tempy "^0.5.0"
+    variant "^2.0.2-beta.8"
 
 optionator@^0.8.1, optionator@^0.8.3:
   version "0.8.3"

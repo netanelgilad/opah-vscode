@@ -484,8 +484,8 @@ describe('executeCanonicalName', () => {
     const tmpFilePath = yield* fixtureFile(
       `
 				import {console} from "console";
-				import {createMacro, Definition} from "@depno/core";
-				import {Map} from "@depno/immutable";
+				import {createMacro, Definition} from "@opah/core";
+				import {Map} from "@opah/immutable";
 
 				const firstMacro = createMacro(async () => {
 					return Definition({
@@ -531,8 +531,8 @@ describe('executeCanonicalName', () => {
       const tmpFilePath = yield* fixtureFile(
         `
 				import {console} from "console";
-				import {createMacro, Definition, CanonicalName} from "@depno/core";
-				import {Map} from "@depno/immutable";
+				import {createMacro, Definition, CanonicalName} from "@opah/core";
+				import {Map} from "@opah/immutable";
 
 				const aMacro = createMacro(async () => {
 					return [

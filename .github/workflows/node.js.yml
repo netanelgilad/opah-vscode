@@ -23,5 +23,5 @@ jobs:
         uses: actions/setup-node@v1
         with:
           node-version: ${{ matrix.node-version }}
-      - run: cd packages/depno && yarn --frozen-lockfile
-      - run: cd packages/depno && yarn test
+      - run: cd packages/opah && yarn --frozen-lockfile
+      - run: cd packages/opah && yarn test
