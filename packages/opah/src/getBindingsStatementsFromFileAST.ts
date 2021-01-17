@@ -6,6 +6,7 @@ import {
   functionExpression,
   ImportDefaultSpecifier,
   ImportSpecifier,
+  isExportSpecifier,
   isFunctionDeclaration,
   isIdentifier,
   isImportDefaultSpecifier,
@@ -35,6 +36,20 @@ export function getBindingsStatementsFromFileAST(ast: File) {
         default: path,
       };
     },
+    ExportNamedDeclaration(path) {
+      bindingsPaths = {
+        ...bindingsPaths,
+        ...path.node.specifiers.reduce((result, specifier) => {
+          if (isExportSpecifier(specifier)) {
+            return {
+              ...result,
+              [specifier.local.name]: path
+            }
+          }
+          return result;
+        }, {})
+      };
+    }
   });
 
   return Map(Object.entries(bindingsPaths!)).map(path => {
