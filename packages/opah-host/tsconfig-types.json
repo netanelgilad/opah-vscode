@@ -17,6 +17,12 @@
     "noFallthroughCasesInSwitch": true,
     "moduleResolution": "node",
     "esModuleInterop": true,
-    "noEmitOnError": false
-  }
+    "noEmitOnError": false,
+    "emitDeclarationOnly": true,
+    "declaration": true,
+    "declarationMap": true,
+    "outDir": "./dist/types",
+    "rootDir": "src"
+  },
+  "files": ["./src/core", "./src/host", "./src/immutable"]
 }

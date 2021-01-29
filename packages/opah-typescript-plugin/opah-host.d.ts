@@ -1,3 +1,3 @@
 declare module "@opah/host" {
-  export * from "opah/src/host";
+  export * from "opah-host/host";
 }

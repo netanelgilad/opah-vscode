@@ -2,9 +2,12 @@
 
 import ncc from "@vercel/ncc";
 import { dirname, join } from "path";
-import { copy, outputFile } from "fs-extra";
+import { copy, outputFile, remove } from "fs-extra";
+import { command } from "execa";
 
 async function main() {
+  await remove('./dist');
+
   await outputFile(
     "./dist/core/index.js",
     (await ncc(join(__dirname, "./src/core.ts"))).code
@@ -24,6 +27,8 @@ async function main() {
     "./dist/core/bootstrap.js"
   );
   await copy(join(pkgPath, "./prelude/common.js"), "./dist/core/common.js");
+
+  await command(`yarn tsc -p tsconfig-types.json`)
 }
 
 main().catch((err) => {
