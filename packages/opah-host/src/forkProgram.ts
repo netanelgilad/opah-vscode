@@ -6,11 +6,11 @@ import { getCodeFromExecutionProgram } from './getCodeFromExecutionProgram';
 
 export function forkProgram(program: Program, cwd: string, silent = false) {
   const requireResolve = require.resolve;
-  const code = getCodeFromExecutionProgram(program, {
+  const code = getCodeFromExecutionProgram(program, process.env.DO_IT ? {
     "@opah/core": requireResolve('./core'),
     "@opah/host": requireResolve('./host'),
-    "@opah/immutable": requireResolve('immutable'),
-  });
+    "@opah/immutable": requireResolve('./immutable'),
+  } : undefined);
 
   const tmpFile = file({ extension: 'js' });
 

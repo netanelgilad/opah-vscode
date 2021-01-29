@@ -20,9 +20,9 @@ export type CoreModulesLocations = {
 export function getCodeFromExecutionProgram(
   program: Program,
   coreModulesLocations: CoreModulesLocations = {
-    "@opah/core": "./core",
-    "@opah/host": "./host",
-    "@opah/immutable": "./immutable"
+    "@opah/core": require.resolve('../core'),
+    "@opah/host": require.resolve('../host'),
+    "@opah/immutable": require.resolve('../immutable'),
   }
 ) {
   const { code } = transformFromAstSync(program, undefined, {

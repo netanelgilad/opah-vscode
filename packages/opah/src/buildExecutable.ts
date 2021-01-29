@@ -1,31 +1,49 @@
+import { Program } from '@babel/types';
 import { writeFileSync } from 'fs';
-import { file } from 'tempy';
-import { Closure } from './Closure';
-import { getCodeFromExecutionProgram } from './getCodeFromExecutionProgram';
-import { getExecutionProgramForDefinition } from './getExecutionCodeForDefinition/getExecutionProgramForDefinition';
+import { copy } from 'fs-extra';
+import { dirname, join } from 'path';
 import { exec } from 'pkg';
-import { callExpression, identifier, memberExpression } from '@babel/types';
+import { directory } from 'tempy';
+import {
+  CoreModulesLocations,
+  getCodeFromExecutionProgram,
+} from './getCodeFromExecutionProgram';
 
 export async function buildExecutable(
-  closure: Closure,
+  program: Program,
+  coreModulesLocations: CoreModulesLocations,
   options: {
     target: 'host';
     output: string;
   }
 ) {
-  const executeExpression = callExpression(closure.expression, [
-    memberExpression(identifier('process'), identifier('argv')),
-  ]);
-  const program = await getExecutionProgramForDefinition(
-    Closure({
-      expression: executeExpression,
-      references: closure.references,
+  const tmpDir = directory();
+
+  await copy(coreModulesLocations['@opah/core'], join(tmpDir, 'core'));
+  await copy(coreModulesLocations['@opah/host'], join(tmpDir, 'host'));
+  await copy(join(dirname(require.resolve('pkg/package.json')), 'dictionary'), join(tmpDir, 'dictionary'));
+  await copy(
+    coreModulesLocations['@opah/immutable'],
+    join(tmpDir, 'immutable')
+  );
+
+  const code = await getCodeFromExecutionProgram(program);
+
+  writeFileSync(join(tmpDir, 'index.js'), code);
+  writeFileSync(
+    join(tmpDir, 'pkg.config.json'),
+    JSON.stringify({
+      assets: ['**/*'],
     })
   );
-  const code = await getCodeFromExecutionProgram(program);
-  const tmpFile = file();
 
-  writeFileSync(tmpFile, code);
-
-  await exec([tmpFile, '--target', options.target, '--output', options.output]);
+  await exec([
+    join(tmpDir, 'index.js'),
+    '--config',
+    join(tmpDir, 'pkg.config.json'),
+    '--target',
+    options.target,
+    '--output',
+    options.output,
+  ]);
 }

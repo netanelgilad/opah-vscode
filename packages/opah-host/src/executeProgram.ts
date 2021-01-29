@@ -3,10 +3,10 @@ import { getCodeFromExecutionProgram } from './getCodeFromExecutionProgram';
 
 export function executeProgram(program: Program) {
   const requireResolve = require.resolve;
-  const code = getCodeFromExecutionProgram(program, {
-    "@opah/core": requireResolve('./c' + 'ore'),
-    "@opah/host": requireResolve('./h' + 'ost'),
-    "@opah/immutable": requireResolve('imm' + 'utable'),
-  });
+  const code = getCodeFromExecutionProgram(program, process.env.DO_IT ? {
+    "@opah/core": requireResolve('./core'),
+    "@opah/host": requireResolve('./host'),
+    "@opah/immutable": requireResolve('./immutable'),
+  } : undefined);
   return eval(code!);
 }
