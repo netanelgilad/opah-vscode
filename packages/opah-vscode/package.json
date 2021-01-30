@@ -2,7 +2,7 @@
   "name": "opah",
   "displayName": "Opah",
   "description": "Opah support for VS code",
-  "version": "0.0.204",
+  "version": "0.0.207",
   "publisher": "netanelgilad",
   "repository": {
     "url": "https://github.com/netanelgilad/opah"
