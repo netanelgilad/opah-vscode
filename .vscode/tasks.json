@@ -1,0 +1,23 @@
+{
+	"version": "2.0.0",
+	"tasks": [
+		{
+			"type": "npm",
+			"script": "watch",
+			"path": "packages/opah-vscode/",
+			"group": "build",
+			"problemMatcher": [],
+			"label": "npm: watch - packages/opah-vscode",
+			"detail": "tsc -watch -p ./"
+		},
+		{
+			"type": "npm",
+			"script": "compile",
+			"path": "packages/opah-vscode/",
+			"group": "build",
+			"problemMatcher": [],
+			"label": "npm: compile - packages/opah-vscode",
+			"detail": "tsc -p ./"
+		}
+	]
+}

@@ -5,6 +5,18 @@
   "version": "0.2.0",
   "configurations": [
     {
+      "args": [
+        "--extensionDevelopmentPath=${workspaceFolder}/packages/opah-vscode/"
+      ],
+      "name": "Launch Extension",
+      "outFiles": [
+        "${workspaceFolder}/packages/opah-vscode/out/**/*.js"
+      ],
+      "preLaunchTask": "npm: compile - packages/opah-vscode",
+      "request": "launch",
+      "type": "pwa-extensionHost"
+    },
+    {
       "type": "node",
       "request": "launch",
       "runtimeVersion": "14.13.0",

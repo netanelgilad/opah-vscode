@@ -1,11 +1,12 @@
 {
   "name": "opah-typescript-plugin",
-  "version": "0.0.207",
+  "version": "0.0.230",
   "main": "index.js",
   "author": "Netanel Gilad",
   "license": "MIT",
   "scripts": {
-    "prepublishOnly": "tsc"
+    "prepublishOnly": "tsc",
+    "watch": "tsc --watch"
   },
   "publishConfig": {
     "registry": "https://registry.npmjs.org/"
@@ -18,6 +19,7 @@
   },
   "dependencies": {
     "@types/node": "^13.13.4",
+    "got": "^11.8.1",
     "immutable": "^4.0.0-rc.12",
     "lodash.flatmap": "^4.5.0",
     "merge-deep": "^3.0.2",
