@@ -47,7 +47,6 @@ function init(modules: {
       join(__dirname, "opah-host"),
     ],
     lib: ["lib.esnext.d.ts"],
-    baseUrl: join(homedir(), ".opah/remotes"),
   };
 
   function create(info: ts.server.PluginCreateInfo) {
@@ -58,6 +57,9 @@ function init(modules: {
     const projectDirectory = info.project.getCurrentDirectory();
     // TypeScript plugins have a `cwd` of `/`, which causes issues with import resolution.
     process.chdir(projectDirectory);
+
+    const virtualRemotesDir = join(projectDirectory, ".opah-remotes");
+    const realRemotesDir = join(homedir(), ".opah/remotes")
 
     // ref https://github.com/Microsoft/TypeScript/wiki/Using-the-Compiler-API#customizing-module-resolution
     const resolveModuleNames = info.languageServiceHost.resolveModuleNames;
@@ -76,12 +78,15 @@ function init(modules: {
     ) => {
       moduleNames = moduleNames.map((moduleName) =>
         moduleName.startsWith("https://")
-          ? stripExtNameDotTs(moduleName.substr("https://".length))
+          ? join(
+            virtualRemotesDir,
+            stripExtNameDotTs(moduleName.substr("https://".length))
+          )
           : ["@opah/immutable", "immutable", immutableJSPath].includes(
-              moduleName
-            )
-          ? immutableTypesPath
-          : stripExtNameDotTs(moduleName)
+            moduleName
+          )
+            ? immutableTypesPath
+            : stripExtNameDotTs(moduleName)
       );
 
       return resolveModuleNames.call(
@@ -185,22 +190,47 @@ function init(modules: {
       return details;
     };
 
-    for (const functionName in info.languageService) {
+    [
+      "readFile",
+      "realpath",
+      "getModifiedTime",
+      "directoryExists",
+      "fileExists",
+      "watchDirectory",
+      "watchFile",
+    ].forEach((functionName) => {
       // @ts-ignore
-      if (typeof info.languageService[functionName] === "function") {
-        // @ts-ignore
-        const origin = info.languageService[functionName];
-        // @ts-ignore
-        info.languageService[functionName] = (...args) => {
-          log(`---> ${functionName} : ${safeStringify(args)}`);
-          const result = origin.call(info.languageService, ...args);
-          log(`<--- ${functionName}: ${safeStringify(result)}`);
-          return result;
-        };
-      }
-    }
+      const origin = info.serverHost[functionName].bind(info.serverHost);
+      // @ts-ignore
+      info.serverHost[functionName] = (path: string, ...rest: any[]) => {
+        if (path.toLowerCase().startsWith(virtualRemotesDir.toLowerCase())) {
+          const realPath = join(
+            homedir(),
+            ".opah/remotes",
+            path.substr(virtualRemotesDir.length)
+          );
+          if (
+            functionName === "watchDirectory"
+          ) {
+            return origin(
+              realPath,
+              (filename: string) => {
+                const replacedPath = join(
+                  virtualRemotesDir,
+                  filename.substr(realRemotesDir.length)
+                );
+                return rest[0](replacedPath);
+              },
+              ...rest.slice(1)
+            );
+          }
+          return origin(realPath, ...rest);
+        }
 
-    return info.languageService;
+        const result = origin(path, ...rest);
+        return result;
+      };
+    });
   }
 
   return { create };
