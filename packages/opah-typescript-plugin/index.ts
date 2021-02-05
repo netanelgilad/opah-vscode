@@ -1,5 +1,6 @@
 import { dirname, join } from "path";
 import merge = require("merge-deep");
+import { homedir } from "os";
 
 function init(modules: {
   typescript: typeof import("typescript/lib/tsserverlibrary");
@@ -40,8 +41,13 @@ function init(modules: {
     noEmitHelpers: OPTIONS.noEmitHelpers,
     target: ts.ScriptTarget.ESNext,
     typeRoots: [],
-    types: [nodeTypesPath, join(__dirname, "opah-core"), join(__dirname, "opah-host")],
+    types: [
+      nodeTypesPath,
+      join(__dirname, "opah-core"),
+      join(__dirname, "opah-host"),
+    ],
     lib: ["lib.esnext.d.ts"],
+    baseUrl: join(homedir(), ".opah/remotes"),
   };
 
   function create(info: ts.server.PluginCreateInfo) {
@@ -69,7 +75,11 @@ function init(modules: {
       options: ts.CompilerOptions = OPTIONS
     ) => {
       moduleNames = moduleNames.map((moduleName) =>
-        ["@opah/immutable", "immutable", immutableJSPath].includes(moduleName)
+        moduleName.startsWith("https://")
+          ? stripExtNameDotTs(moduleName.substr("https://".length))
+          : ["@opah/immutable", "immutable", immutableJSPath].includes(
+              moduleName
+            )
           ? immutableTypesPath
           : stripExtNameDotTs(moduleName)
       );
