@@ -1355,10 +1355,10 @@ opah-host@^0.1.4:
   dependencies:
     "@babel/types" "^7.12.12"
 
-opah-typescript-plugin@^0.0.231:
-  version "0.0.231"
-  resolved "https://registry.yarnpkg.com/opah-typescript-plugin/-/opah-typescript-plugin-0.0.231.tgz#2bb9d5bb8c5dda749159b47e2ef205fe21c331fc"
-  integrity sha512-Hq5/2XZ52fxuAjfkcezyW2O7o82RXmLQxcR1PWOfpz645aAJHorgCCbSBK/qj6CMe8Ten0ytAakPpMjihKiBSw==
+opah-typescript-plugin@^0.0.232:
+  version "0.0.232"
+  resolved "https://registry.yarnpkg.com/opah-typescript-plugin/-/opah-typescript-plugin-0.0.232.tgz#858915753384d32b29f4b23d600f77150d3ee734"
+  integrity sha512-EjT3VPDgjeY0Tvp4vDWhtgEYeHxNzQhFNGIMXeBlzAANYbrK2c5S8ko4USuFhqH7cuLSMiRMVfUYGpPffdwxTg==
   dependencies:
     "@types/node" "^13.13.4"
     got "^11.8.1"

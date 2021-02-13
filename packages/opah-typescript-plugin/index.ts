@@ -1,4 +1,4 @@
-import { dirname, join } from "path";
+import { dirname, join, resolve } from "path";
 import merge = require("merge-deep");
 import { homedir } from "os";
 
@@ -58,8 +58,10 @@ function init(modules: {
     // TypeScript plugins have a `cwd` of `/`, which causes issues with import resolution.
     process.chdir(projectDirectory);
 
-    const virtualRemotesDir = join(projectDirectory, ".opah-remotes");
-    const realRemotesDir = join(homedir(), ".opah/remotes")
+    const virtualRemotesDir = join(projectDirectory, "opah-remotes");
+    const realRemotesDir = join(homedir(), ".opah/remotes");
+    const fakeTsConfigFilePath = join(__dirname, "./assets/tsconfig.json");
+    const virtualTsConfigFilePath = join(projectDirectory, "tsconfig.json");
 
     // ref https://github.com/Microsoft/TypeScript/wiki/Using-the-Compiler-API#customizing-module-resolution
     const resolveModuleNames = info.languageServiceHost.resolveModuleNames;
@@ -79,14 +81,14 @@ function init(modules: {
       moduleNames = moduleNames.map((moduleName) =>
         moduleName.startsWith("https://")
           ? join(
-            virtualRemotesDir,
-            stripExtNameDotTs(moduleName.substr("https://".length))
-          )
+              virtualRemotesDir,
+              stripExtNameDotTs(moduleName.substr("https://".length))
+            )
           : ["@opah/immutable", "immutable", immutableJSPath].includes(
-            moduleName
-          )
-            ? immutableTypesPath
-            : stripExtNameDotTs(moduleName)
+              moduleName
+            )
+          ? immutableTypesPath
+          : stripExtNameDotTs(moduleName)
       );
 
       return resolveModuleNames.call(
@@ -176,10 +178,30 @@ function init(modules: {
             for (const change of ca.changes) {
               if (!change.isNewFile) {
                 for (const tc of change.textChanges) {
-                  tc.newText = tc.newText.replace(
-                    /^(import .* from ['"])(\..*)(['"];\n)/i,
-                    "$1$2.ts$3"
+                  const matches = /^(?<beforePath>import .* from ['"])(?<importPath>\..*)(?<afterPath>['"];\n)/i.exec(
+                    tc.newText
                   );
+                  if (matches) {
+                    const {
+                      beforePath,
+                      importPath,
+                      afterPath,
+                    } = matches.groups!;
+                    const targetImportPath = resolve(
+                      dirname(fileName),
+                      importPath
+                    );
+                    if (targetImportPath.startsWith(virtualRemotesDir)) {
+                      tc.newText =
+                        beforePath +
+                        `https://${targetImportPath.substr(
+                          virtualRemotesDir.length + 1
+                        )}.ts` +
+                        afterPath;
+                    } else {
+                      tc.newText = beforePath + `${importPath}.ts` + afterPath;
+                    }
+                  }
                 }
               }
             }
@@ -196,22 +218,38 @@ function init(modules: {
       "getModifiedTime",
       "directoryExists",
       "fileExists",
+      "readDirectory",
       "watchDirectory",
       "watchFile",
+      "setModifiedTime",
+      "deleteFile",
+      "getDirectories",
+      "resolvePath",
+      "getFileSize",
     ].forEach((functionName) => {
       // @ts-ignore
       const origin = info.serverHost[functionName].bind(info.serverHost);
       // @ts-ignore
       info.serverHost[functionName] = (path: string, ...rest: any[]) => {
+        if (path.toLowerCase() === virtualTsConfigFilePath.toLowerCase()) {
+          if (functionName === "watchFile") {
+            setTimeout(() => {
+              rest[0](virtualTsConfigFilePath, ts.FileWatcherEventKind.Created);
+            }, 0);
+            return origin(
+              fakeTsConfigFilePath,
+              () => rest[0](virtualTsConfigFilePath),
+              ...rest.slice(1)
+            );
+          }
+          return origin(fakeTsConfigFilePath, ...rest);
+        }
         if (path.toLowerCase().startsWith(virtualRemotesDir.toLowerCase())) {
           const realPath = join(
-            homedir(),
-            ".opah/remotes",
+            realRemotesDir,
             path.substr(virtualRemotesDir.length)
           );
-          if (
-            functionName === "watchDirectory"
-          ) {
+          if (functionName === "watchDirectory") {
             return origin(
               realPath,
               (filename: string) => {
@@ -228,6 +266,13 @@ function init(modules: {
         }
 
         const result = origin(path, ...rest);
+
+        if (functionName === "getDirectories" && path === projectDirectory) {
+          result.push("opah-remotes");
+        }
+        if (functionName === "readDirectory" && path === projectDirectory) {
+          result.push(join(projectDirectory, "opah-remotes"));
+        }
         return result;
       };
     });

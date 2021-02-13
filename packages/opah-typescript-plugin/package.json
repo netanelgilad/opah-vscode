@@ -1,6 +1,6 @@
 {
   "name": "opah-typescript-plugin",
-  "version": "0.0.231",
+  "version": "0.0.232",
   "main": "index.js",
   "author": "Netanel Gilad",
   "license": "MIT",
