@@ -317,10 +317,10 @@ once@^1.3.1, once@^1.4.0:
   dependencies:
     wrappy "1"
 
-opah-host@^0.1.5:
-  version "0.1.5"
-  resolved "https://registry.npmjs.org/opah-host/-/opah-host-0.1.5.tgz#1f6c3c71cc1ff2abd30d988d8700ed0eb218d275"
-  integrity sha512-hfI+FxK3XfmQT8Qbddk92LTZ628oNB1Y8//MWut39rT7a70C9X1NX6wE+/znlI9D6Q0B0Y7eu5UMOhP8xwY3Mw==
+opah-host@^0.1.7:
+  version "0.1.7"
+  resolved "https://registry.npmjs.org/opah-host/-/opah-host-0.1.7.tgz#5070689252fbcf4c035923e72dedfa470675b22f"
+  integrity sha512-7MMw3xkm5XVROxLTPKIJzG+Whcj0bP73SFmaghw50CRwcJSZoPtdvi8AG4Bm5WQL0AWeGY0NPSOwsQTqgc7d6A==
   dependencies:
     "@babel/types" "^7.12.12"
 
