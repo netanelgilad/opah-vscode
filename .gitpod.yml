@@ -1,0 +1,6 @@
+tasks:
+  - before: sudo apt-get install -y libsecret-1-dev
+  - init: |
+      echo 'TODO: build project'
+    command: |
+      echo 'TODO: start app'
