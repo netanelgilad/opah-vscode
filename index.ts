@@ -22,7 +22,7 @@ export async function publishExtension() {
   });
 
   await runCommand(
-    "yarn upgrade --latest opah-typescript-plugin && yarn version --patch --no-git-tag-version && npx vsce publish",
+    "yarn upgrade --latest opah-typescript-plugin && yarn version --patch --no-git-tag-version && npx ovsx publish",
     {
       cwd: "./packages/opah-vscode",
     }
