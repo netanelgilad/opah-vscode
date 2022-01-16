@@ -1,6 +1,6 @@
 {
   "name": "opah-typescript-plugin",
-  "version": "0.0.237",
+  "version": "0.0.238",
   "main": "index.js",
   "author": "Netanel Gilad",
   "license": "MIT",
@@ -23,6 +23,6 @@
     "immutable": "^4.0.0-rc.12",
     "lodash.flatmap": "^4.5.0",
     "merge-deep": "^3.0.2",
-    "opah-host": "^0.1.9"
+    "opah-host": "^0.1.10"
   }
 }

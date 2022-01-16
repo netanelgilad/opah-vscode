@@ -1384,24 +1384,24 @@ onetime@^5.1.0:
   dependencies:
     mimic-fn "^2.1.0"
 
-opah-host@^0.1.9:
-  version "0.1.9"
-  resolved "https://registry.yarnpkg.com/opah-host/-/opah-host-0.1.9.tgz#22cd5c69baa18e4ef5cb654a1fc05ce660e27a7c"
-  integrity sha512-5hYRFVDRE2Zh6xIXVtGjADSi/Jf2UaVpJl8iUmseZjR3Um+NvD2jaJWWk0P6twyZJdBb/CQg9JnWmD4FXydxmg==
+opah-host@^0.1.10:
+  version "0.1.10"
+  resolved "https://registry.yarnpkg.com/opah-host/-/opah-host-0.1.10.tgz#5ef188ddbaafa23320d8511b38b31434e600ae01"
+  integrity sha512-ZHCugVpSTJwIvbf9S07CNBtMkht9I1eGqyrTZUsTw4xR6XMm7d/VkygxjbQcHQeG3Kn5BP6rkKA4baptmsm57Q==
   dependencies:
     "@babel/types" "^7.12.12"
 
-opah-typescript-plugin@^0.0.237:
-  version "0.0.237"
-  resolved "https://registry.yarnpkg.com/opah-typescript-plugin/-/opah-typescript-plugin-0.0.237.tgz#2af8de2efe2f5239bb2d497ddddb36093ef60997"
-  integrity sha512-xX5aJZCI+9Xp7LuVe7lajLJuWHAKua0VU5WqibtOSl3qpHzR/TS4a4cnNUZCVc0vVUlFnHfe6n8Z8goY9hpfOw==
+opah-typescript-plugin@^0.0.238:
+  version "0.0.238"
+  resolved "https://registry.yarnpkg.com/opah-typescript-plugin/-/opah-typescript-plugin-0.0.238.tgz#14c22cd8454963f74515fc3078d969dfded037e2"
+  integrity sha512-67QkVYLl+XLaEcVd4lOM5z53RBJqteAvTnH9VBKm7wxjBsAxsKznqWJXEs/q7ygTkzuW6s1xhHt0awXh8U7uRA==
   dependencies:
     "@types/node" "^13.13.4"
     got "^11.8.1"
     immutable "^4.0.0-rc.12"
     lodash.flatmap "^4.5.0"
     merge-deep "^3.0.2"
-    opah-host "^0.1.9"
+    opah-host "^0.1.10"
 
 optionator@^0.8.3:
   version "0.8.3"

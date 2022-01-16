@@ -2,7 +2,7 @@
     "name": "opah",
     "displayName": "Opah",
     "description": "Opah support for VS code",
-    "version": "0.0.239",
+    "version": "0.0.240",
     "publisher": "netanelgilad",
     "repository": {
         "url": "https://github.com/netanelgilad/opah"
@@ -63,7 +63,7 @@
     "dependencies": {
         "fs-extra": "^9.1.0",
         "got": "^11.8.1",
-        "opah-typescript-plugin": "^0.0.237"
+        "opah-typescript-plugin": "^0.0.238"
     },
     "license": "MIT"
 }
