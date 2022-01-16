@@ -22,7 +22,7 @@
     "got": "^11.8.1",
     "immutable": "^4.0.0-rc.12",
     "lodash.flatmap": "^4.5.0",
-    "merge-deep": "^3.0.2",
+    "merge-deep": "^3.0.3",
     "opah-host": "^0.1.10"
   }
 }
