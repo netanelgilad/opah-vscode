@@ -19,7 +19,7 @@
   },
   "dependencies": {
     "@types/node": "^13.13.4",
-    "got": "^11.8.1",
+    "got": "^11.8.5",
     "immutable": "^4.0.0-rc.12",
     "lodash.flatmap": "^4.5.0",
     "merge-deep": "^3.0.2",
